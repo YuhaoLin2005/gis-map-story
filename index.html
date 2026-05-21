@@ -3,564 +3,1040 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>如果2023年我没有读大学 | 林宇浩 3235706088 | 空间信息与数字技术</title>
-    <script src="https://api.map.baidu.com/api?type=webgl&v=1.0&ak=xhldCkmJHJM7LEs1fvSpe7z5lILxF8MF"></script>
+    <title>轮迹中国：GIS专业实地研学报告 | 交互版</title>
+    <script src="https://api.map.baidu.com/api?v=3.0&type=webgl&ak=CnlFbaIZ6lKShAw6r0szVx1v4djJZvQ2"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body,html{width:100%;height:100%;overflow:hidden;font-family:"Segoe UI","微软雅黑","PingFang SC",sans-serif;background:#08121a;}
+        *{margin:0;padding:0;box-sizing:border-box;user-select:none;}
+        body,html{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI','微软雅黑','PingFang SC',sans-serif;background:#03070f;color:#e2e8f0;}
         #map-container{width:100%;height:100%;position:absolute;top:0;left:0;z-index:1;}
-        
-        /* 顶部章节条 */
-        .chapter-bar{
-            position:absolute;top:0;left:0;right:0;z-index:9999;
-            background:rgba(12,22,33,0.98);backdrop-filter:blur(12px);
-            padding:12px 16px;display:flex;align-items:center;gap:10px;
-            border-bottom:1px solid rgba(20,184,166,0.3);
-            height:56px;
-        }
-        .chapter-step{
-            flex:1;text-align:center;font-size:12px;color:#7a8ca3;
-            padding:8px 6px;border-radius:22px;transition:all 0.4s;position:relative;
-            cursor:pointer;user-select:none;font-weight:500;
-        }
-        .chapter-step:hover{color:#cbd5e1;}
-        .chapter-step.active{color:#ffffff;font-weight:700;}
-        .chapter-step.active[data-phase="begin"]{background:linear-gradient(135deg,#0d9488,#14b8a6);}
-        .chapter-step.active[data-phase="develop"]{background:linear-gradient(135deg,#d9706,#f59e0b);}
-        .chapter-step.active[data-phase="climax"]{background:linear-gradient(135deg,#dc2626,#ef4444);}
-        .chapter-step.active[data-phase="end"]{background:linear-gradient(135deg,#7c3aed,#8b5cf6);}
-        .chapter-step::after{content:'→';position:absolute;right:-6px;top:50%;transform:translateY(-50%);color:#475569;font-size:10px;}
-        .chapter-step:last-child::after{display:none;}
-        
-        /* 控制按钮区 */
-        .top-right-controls{
-            position:absolute;top:62px;right:14px;z-index:9999;
-            display:flex;gap:8px;
-            background:rgba(12,22,33,0.9);backdrop-filter:blur(12px);
-            padding:10px 12px;border-radius:16px;
-            border:1px solid rgba(20,184,166,0.2);
-        }
-        .btn{
-            padding:8px 14px;border:none;border-radius:10px;
-            color:#ffffff;font-weight:600;cursor:pointer;font-size:12px;
-            transition:all 0.3s;white-space:nowrap;
-        }
-        .btn:hover{transform:translateY(-2px);filter:brightness(1.1);}
-        .btn:disabled{background:linear-gradient(135deg,#1e293b,#0f172a);color:#64748b;cursor:not-allowed;}
-        .btn-auto{background:linear-gradient(135deg,#b45309,#f97316);}
-        .btn-reset{background:linear-gradient(135deg,#be123c,#ef4444);}
-        .btn-layer{background:linear-gradient(135deg,#16a34a,#22c55e);}
-        .speed-select{background:#1e293b;border-radius:10px;padding:4px 8px;color:white;font-size:12px;border:none;}
-        
-        /* 进度条 */
-        .progress-bar{
-            position:absolute;top:56px;left:0;right:0;z-index:9998;
-            height:4px;background:rgba(255,255,255,0.08);
-        }
-        .progress-fill{
-            height:100%;background:linear-gradient(90deg,#14b8a6,#22d3ee,#7c3aed);
-            transition:width 0.6s ease;box-shadow:0 0 12px rgba(34,211,238,0.6);
-            width:0%;
-        }
-        
-        /* 左侧故事面板 */
-        .story-panel{
-            position:absolute;top:70px;left:14px;z-index:9999;
-            background:rgba(12,22,33,0.95);backdrop-filter:blur(14px);
-            border-radius:20px;padding:22px;width:360px;
-            border:1px solid rgba(20,184,166,0.2);
-            max-height:calc(100vh - 190px);
-            overflow-y:auto;
-            transition:opacity 0.4s, transform 0.4s;
-            opacity:0;transform:translateX(-20px);pointer-events:none;
-        }
-        .story-panel.show{opacity:1;transform:translateX(0);pointer-events:auto;}
-        .story-panel::-webkit-scrollbar{width:6px;}
-        .story-panel::-webkit-scrollbar-thumb{background:rgba(20,184,166,0.4);border-radius:6px;}
-        .dedication{font-size:12px;color:#94a3b8;font-style:italic;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(20,184,166,0.2);}
-        .phase-tag{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:12px;}
-        .phase-begin{background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;}
-        .phase-develop{background:linear-gradient(135deg,#d9706,#f59e0b);color:#fff;}
-        .phase-climax{background:linear-gradient(135deg,#dc2626,#ef4444);animation:pulse 2.5s infinite;}
-        .phase-end{background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:#fff;}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.3);}50%{box-shadow:0 0 0 8px rgba(220,38,38,0);}}
-        .station-title{font-size:19px;font-weight:700;color:#f1f5f9;margin-bottom:10px;}
-        .station-date{font-size:13px;color:#94a3b8;margin-bottom:14px;}
-        .story-img{width:100%;height:170px;object-fit:cover;border-radius:16px;margin-bottom:16px;border:1px solid rgba(20,184,166,0.3);}
-        .station-desc{font-size:14px;line-height:1.8;color:#cbd5e1;text-align:justify;}
-        .quiz-area{margin-top:16px;background:rgba(20,184,166,0.15);border-radius:12px;padding:12px;}
-        .quiz-area input{width:160px;background:#1e293b;border:none;padding:6px 10px;border-radius:20px;color:white;margin-right:6px;}
-        .quiz-area button{background:#0d9488;border:none;border-radius:16px;padding:6px 12px;color:white;cursor:pointer;}
-        .quiz-feedback{font-size:12px;margin-top:8px;color:#22d3ee;}
-        .nav-buttons{display:flex;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(20,184,166,0.2);}
-        .nav-btn{flex:1;padding:12px;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s;color:#fff;}
-        .nav-btn:hover{filter:brightness(1.15);transform:translateY(-2px);}
-        .nav-prev{background:linear-gradient(135deg,#475569,#334155);}
-        .nav-next{background:linear-gradient(135deg,#0d9488,#14b8a6);}
-        
-        /* 骑行中面板 */
-        .riding-panel{
-            position:absolute;top:70px;left:14px;z-index:9999;
-            background:rgba(12,22,33,0.95);backdrop-filter:blur(14px);
-            border-radius:20px;padding:22px;width:360px;
-            border:1px solid rgba(20,184,166,0.2);
-            display:none;
-        }
-        .riding-panel.active{display:block;animation:slideIn 0.4s ease;}
-        @keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
-        .riding-status{font-size:15px;color:#e2e8f0;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-        .riding-dot{width:10px;height:10px;border-radius:50%;background:#14b8a6;box-shadow:0 0 10px rgba(20,184,166,0.7);animation:blink 1s infinite;}
-        @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
-        .riding-route{font-size:14px;color:#cbd5e1;line-height:1.8;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(20,184,166,0.2);}
-        .riding-info{font-size:13px;color:#94a3b8;}
-        
-        /* 右下角数据面板 */
-        .data-panel{
-            position:absolute;bottom:120px;right:24px;z-index:9999;
-            background:linear-gradient(135deg,#0f172a,#1e293b);
-            backdrop-filter:blur(16px);border-radius:20px;padding:20px 22px;width:280px;
-            box-shadow:0 8px 32px rgba(0,0,0,0.5);border:1px solid rgba(34,211,238,0.3);
-        }
-        .data-title{font-size:15px;font-weight:700;color:#22d3ee;margin-bottom:16px;text-shadow:0 0 4px rgba(34,211,238,0.3);}
-        .data-item{display:flex;justify-content:space-between;padding:12px 0;font-size:13px;border-bottom:1px solid rgba(34,211,238,0.15);}
-        .data-item span:first-child{color:#cbd5e1;font-weight:500;}
-        .data-item span:last-child{color:#ffffff;font-weight:700;background:rgba(34,211,238,0.25);padding:4px 10px;border-radius:6px;text-shadow:0 0 3px rgba(0,0,0,0.5);}
-        
-        /* 提示弹窗 */
-        .climax-toast,.ending-toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);z-index:10000;padding:24px 42px;border-radius:22px;font-size:22px;font-weight:700;pointer-events:none;opacity:0;transition:0.5s;backdrop-filter:blur(12px);text-align:center;}
-        .climax-toast{background:linear-gradient(135deg,rgba(220,38,38,0.95),rgba(239,68,68,0.9));color:#fff;}
-        .ending-toast{background:linear-gradient(135deg,rgba(124,58,237,0.95),rgba(139,92,246,0.9));color:#fff;font-size:18px;}
-        .climax-toast.show,.ending-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
-        
-        /* 底部里程滑块 */
-        .slider-panel{
-            position:absolute;bottom:40px;left:20px;right:20px;z-index:9999;
-            background:rgba(12,22,33,0.95);backdrop-filter:blur(12px);
-            border-radius:20px;padding:14px 22px;
-            border:1px solid rgba(20,184,166,0.2);
-            display:flex;gap:14px;align-items:center;
-        }
-        .slider-panel input{flex:1;height:5px;border-radius:4px;background:#334155;appearance:none;}
-        .slider-panel input::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#22d3ee;cursor:pointer;box-shadow:0 0 8px rgba(34,211,238,0.7);}
-        .slider-label{color:#cbd5e1;font-size:13px;font-weight:500;white-space:nowrap;}
 
-        @media (max-width:768px){
-            .story-panel,.riding-panel{width:calc(100vw - 28px);left:14px;right:14px;top:70px;}
-            .data-panel{width:calc(100vw - 40px);left:20px;right:20px;bottom:120px;}
-            .top-right-controls{top:auto;bottom:40px;left:14px;right:14px;justify-content:center;}
-            .slider-panel{bottom:40px;flex-wrap:wrap;}
+        /* ===== 开场引导 ===== */
+        .intro-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,7,15,0.92);backdrop-filter:blur(12px);z-index:50000;display:none;align-items:center;justify-content:center;}
+        .intro-content{background:rgba(8,16,28,0.98);border:1px solid rgba(34,211,238,0.4);border-radius:24px;padding:32px;max-width:580px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+        .intro-content h2{color:#facc15;font-size:26px;margin-bottom:6px;text-align:center;}
+        .intro-content h3{color:#22d3ee;font-size:15px;margin-bottom:16px;text-align:center;font-weight:600;}
+        .intro-lead{font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:18px;padding:12px;background:rgba(30,41,59,0.5);border-radius:12px;border-left:3px solid #22d3ee;text-align:justify;}
+        .intro-section{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+        .intro-item{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:#cbd5e1;line-height:1.5;}
+        .intro-icon{font-size:20px;min-width:28px;text-align:center;margin-top:2px;}
+        .intro-item strong{color:#e2e8f0;font-size:13.5px;}
+        .intro-btn{width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;font-size:15px;font-weight:700;cursor:pointer;transition:0.2s;}
+        .intro-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(20,184,166,0.4);}
+
+        /* ===== 章节过渡 ===== */
+        .chapter-transition{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,7,15,0.88);backdrop-filter:blur(16px);z-index:45000;display:none;align-items:center;justify-content:center;opacity:0;transition:opacity 0.5s;}
+        .chapter-transition.show{display:flex;opacity:1;}
+        .transition-content{text-align:center;max-width:520px;padding:40px;}
+        .transition-phase{color:#22d3ee;font-size:14px;font-weight:700;letter-spacing:2px;margin-bottom:16px;text-transform:uppercase;}
+        .transition-title{color:#facc15;font-size:36px;font-weight:800;margin-bottom:20px;line-height:1.3;}
+        .transition-desc{color:#cbd5e1;font-size:15px;line-height:1.8;margin-bottom:28px;}
+        .transition-next{color:#64748b;font-size:13px;font-style:italic;}
+
+        /* ===== 终章弹窗 ===== */
+        .ending-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,7,15,0.9);backdrop-filter:blur(20px);z-index:46000;display:none;align-items:center;justify-content:center;}
+        .ending-modal.show{display:flex;}
+        .ending-content{background:rgba(8,16,28,0.98);border:2px solid rgba(139,92,246,0.5);border-radius:28px;padding:40px;max-width:480px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+        .ending-content h2{color:#facc15;font-size:28px;margin-bottom:10px;}
+        .ending-content>p{color:#94a3b8;font-size:14px;margin-bottom:24px;}
+        .ending-stats{display:flex;justify-content:center;gap:32px;margin-bottom:28px;}
+        .ending-stats div{color:#e2e8f0;font-size:13px;}
+        .ending-stats div strong{display:block;color:#facc15;font-size:28px;margin-bottom:4px;}
+
+        /* ===== 知识图谱 ===== */
+        .knowledge-map{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,7,15,0.93);backdrop-filter:blur(20px);z-index:47000;display:none;align-items:center;justify-content:center;overflow-y:auto;}
+        .knowledge-map.show{display:flex;}
+        .knowledge-content{background:rgba(8,16,28,0.98);border:1px solid rgba(34,211,238,0.4);border-radius:24px;padding:32px;max-width:800px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6);text-align:center;}
+        .knowledge-content h2{color:#facc15;font-size:24px;margin-bottom:6px;}
+        .knowledge-subtitle{color:#94a3b8;font-size:13px;margin-bottom:24px;}
+        .knowledge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+        .knowledge-card{background:rgba(30,41,59,0.6);border:1px solid rgba(34,211,238,0.2);border-radius:16px;padding:14px;text-align:left;transition:0.2s;}
+        .knowledge-card:hover{background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.5);transform:translateY(-2px);}
+        .knowledge-num{color:#22d3ee;font-size:11px;font-weight:700;margin-bottom:4px;}
+        .knowledge-name{color:#e2e8f0;font-size:14px;font-weight:700;margin-bottom:6px;}
+        .knowledge-concept{color:#94a3b8;font-size:11px;line-height:1.5;}
+        .knowledge-summary{background:rgba(30,41,59,0.6);border-left:3px solid #facc15;border-radius:12px;padding:14px;text-align:left;color:#cbd5e1;font-size:13px;line-height:1.7;margin-bottom:20px;}
+
+        /* ===== 任务弹窗 ===== */
+        .mission-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.95);background:rgba(8,16,28,0.98);backdrop-filter:blur(24px);border-radius:24px;padding:28px;border:2px solid #22d3ee;z-index:30000;width:440px;max-width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:0.3s;text-align:center;}
+        .mission-popup.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+        .mission-popup h3{color:#22d3ee;font-size:20px;margin-bottom:14px;}
+        .mission-popup-hint{margin-top:12px;font-size:12px;color:#94a3b8;font-style:italic;}
+        .mission-popup-btn{margin-top:16px;padding:10px 24px;border:none;border-radius:10px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;font-size:14px;font-weight:700;cursor:pointer;transition:0.2s;}
+        .mission-popup-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(14,165,233,0.4);}
+
+        /* ===== 任务浮窗 ===== */
+        .mission-float{position:absolute;bottom:20px;left:20px;z-index:9999;width:320px;background:rgba(8,16,28,0.96);backdrop-filter:blur(20px);border-radius:16px;border:1px solid rgba(34,211,238,0.4);box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;display:none;transition:0.3s;}
+        .mission-header{padding:10px 14px;font-size:13px;font-weight:700;color:#22d3ee;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(34,211,238,0.1);user-select:none;}
+        .mission-body{padding:12px 14px;font-size:12px;line-height:1.6;color:#e2e8f0;max-height:200px;overflow-y:auto;display:block;}
+        .mission-body.hidden{display:none;}
+
+        /* ===== 顶部横幅 ===== */
+        .top-banner{position:fixed;top:82px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(8,16,28,0.95);backdrop-filter:blur(20px);border:2px solid #facc15;border-radius:16px;padding:12px 28px;z-index:35000;opacity:0;pointer-events:none;transition:0.4s;white-space:nowrap;font-size:14px;font-weight:700;color:#facc15;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+        .top-banner.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0);}
+
+        /* ===== 章节栏 ===== */
+        .chapter-bar{position:absolute;top:14px;left:16px;right:16px;z-index:9999;background:rgba(8,16,28,0.94);backdrop-filter:blur(16px);padding:8px 14px;display:flex;gap:12px;border-radius:60px;border:1px solid rgba(34,211,238,0.35);box-shadow:0 8px 20px rgba(0,0,0,0.4);transition:0.3s;}
+        .chapter-step{flex:1;text-align:center;font-size:13px;font-weight:600;color:#94a3b8;padding:8px 4px;border-radius:32px;transition:0.3s;cursor:pointer;letter-spacing:1px;position:relative;}
+        .chapter-step.active{color:#fff;font-weight:700;background:linear-gradient(135deg,#14b8a6,#0d9488);box-shadow:0 2px 12px rgba(20,184,166,0.4);}
+        .chapter-step[data-phase="climax"].active{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 2px 12px rgba(239,68,68,0.4);}
+        .chapter-step[data-phase="end"].active{background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 2px 12px rgba(139,92,246,0.4);}
+        .chapter-step:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:#334155;font-size:12px;}
+
+        /* ===== 顶部控制 ===== */
+        .top-right-controls{position:absolute;top:78px;right:20px;z-index:9999;display:flex;gap:8px;background:rgba(8,16,28,0.92);backdrop-filter:blur(16px);padding:6px 16px;border-radius:48px;border:1px solid rgba(34,211,238,0.3);transition:0.3s;}
+        .btn{padding:6px 14px;border:none;border-radius:32px;font-weight:600;font-size:12px;cursor:pointer;color:white;transition:0.2s;}
+        .btn-reset{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+        .btn-layer{background:linear-gradient(135deg,#16a34a,#15803d);}
+        .btn-next{background:linear-gradient(135deg,#0ea5e9,#0284c7);display:none;}
+        .btn-next.show{display:block;animation:breathe 2s infinite;}
+        .btn-immersive{background:linear-gradient(135deg,#6366f1,#4f46e5);}
+        .btn-next:disabled{background:#475569;cursor:not-allowed;}
+        .speed-select{background:#1e293b;border:1px solid rgba(34,211,238,0.4);border-radius:32px;padding:5px 12px;color:white;font-size:12px;cursor:pointer;}
+        @keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(14,165,233,0.4);}50%{box-shadow:0 0 0 8px rgba(14,165,233,0);}}
+
+        /* ===== 故事面板 ===== */
+        .story-panel{position:absolute;top:120px;left:20px;z-index:9999;background:rgba(8,16,28,0.96);backdrop-filter:blur(24px);border-radius:28px;padding:20px;width:400px;border:1px solid rgba(34,211,238,0.4);box-shadow:0 15px 35px rgba(0,0,0,0.6);transition:0.4s ease;max-height:calc(100vh - 180px);overflow-y:auto;}
+        .story-panel.collapsed{width:50px;padding:12px;overflow:hidden;}
+        .story-panel.collapsed .panel-content{display:none;}
+        .story-panel.riding-hidden{transform:translateX(-420px);opacity:0;pointer-events:none;}
+        .story-panel.branch-qingzang{border-color:rgba(34,211,238,0.6);box-shadow:0 15px 35px rgba(34,211,238,0.15);}
+        .story-panel.branch-hexi{border-color:rgba(245,158,11,0.6);box-shadow:0 15px 35px rgba(245,158,11,0.15);}
+        .collapse-btn{position:absolute;top:14px;right:14px;cursor:pointer;background:rgba(34,211,238,0.2);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:10;transition:0.2s;}
+        .collapse-btn:hover{background:#22d3ee;color:#0f172a;}
+        .author-line{font-size:11px;color:#64748b;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(34,211,238,0.2);}
+        .phase-tag{display:inline-block;padding:4px 16px;border-radius:40px;font-size:11px;font-weight:800;margin-bottom:10px;}
+        .phase-begin{background:#14b8a6;box-shadow:0 0 8px #14b8a6;}
+        .phase-develop{background:#f59e0b;box-shadow:0 0 8px #f59e0b;}
+        .phase-climax{background:#ef4444;animation:pulse 2s infinite;}
+        .phase-end{background:#8b5cf6;}
+        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,0.5);}100%{box-shadow:0 0 0 12px rgba(239,68,68,0);}}
+        .station-title{font-size:20px;font-weight:800;color:white;margin-bottom:4px;}
+        .station-date{font-size:11px;color:#94a3b8;margin-bottom:10px;border-left:2px solid #22d3ee;padding-left:8px;}
+        .data-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+        .data-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(30,41,59,0.8);border:1px solid rgba(34,211,238,0.3);color:#22d3ee;font-weight:600;}
+        .story-img{width:100%;height:150px;object-fit:cover;border-radius:20px;margin-bottom:12px;border:1px solid rgba(34,211,238,0.5);background:#1e293b;}
+
+        /* 叙事区：日记与GIS同时展示 */
+        .narrative-box{margin:10px 0;padding:12px;background:rgba(30,41,59,0.6);border-radius:12px;border-left:3px solid #0ea5e9;}
+        .narrative-box:last-child{border-left-color:#22d3ee;}
+        .narrative-label{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .narrative-label.diary{color:#0ea5e9;}
+        .narrative-label.gis{color:#22d3ee;}
+        .narrative-text{font-size:13px;line-height:1.7;color:#cbd5e1;text-align:justify;}
+
+        /* ===== 骑行中面板 ===== */
+        .riding-panel{position:absolute;top:120px;left:20px;z-index:9999;width:400px;background:rgba(0,0,0,0.92);backdrop-filter:blur(24px);border-radius:28px;padding:22px;border:1px solid #facc15;display:none;box-shadow:0 12px 30px rgba(0,0,0,0.6);}
+        .riding-panel.active{display:block;animation:slideUp 0.4s;}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+        .riding-status{display:flex;align-items:center;gap:12px;font-weight:700;color:#facc15;margin-bottom:14px;}
+        .riding-dot{width:12px;height:12px;background:#facc15;border-radius:50%;animation:blink 1s infinite;}
+        @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+        .riding-route{font-size:14px;margin-bottom:12px;border-left:2px solid #facc15;padding-left:12px;}
+        .riding-info{font-size:12px;color:#94a3b8;}
+
+        /* ===== 右侧面板 ===== */
+        .right-stack{position:absolute;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px;width:270px;transition:0.4s;}
+        .right-stack.riding-hidden{transform:translateX(290px);opacity:0;pointer-events:none;}
+        .data-panel{background:rgba(8,16,28,0.92);backdrop-filter:blur(20px);border-radius:24px;padding:16px;border:1px solid rgba(34,211,238,0.5);}
+        .data-title{font-size:14px;font-weight:800;color:#22d3ee;margin-bottom:12px;display:flex;justify-content:space-between;cursor:pointer;}
+        .data-item{display:flex;justify-content:space-between;padding:8px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.08);}
+        .data-item span:last-child{font-weight:800;color:#facc15;}
+        .journal{max-height:160px;overflow-y:auto;margin-top:12px;border-top:1px solid rgba(34,211,238,0.2);display:none;}
+        .journal.show{display:block;}
+        .journal-entry{font-size:11px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.1);cursor:pointer;transition:0.2s;}
+        .journal-entry:hover{background:rgba(34,211,238,0.1);}
+        .journal-entry.active{color:#facc15;font-weight:700;}
+        .journal-entry.future{color:#64748b;}
+        .journal-entry strong{color:#22d3ee;}
+
+        .elevation-panel{background:rgba(8,16,28,0.92);backdrop-filter:blur(20px);border-radius:24px;padding:12px;border:1px solid rgba(34,211,238,0.4);}
+        .elevation-title{font-size:11px;font-weight:700;color:#22d3ee;margin-bottom:8px;display:flex;justify-content:space-between;}
+        #elevationCanvas{width:100%;height:130px;display:block;cursor:crosshair;}
+        .ele-tooltip{position:absolute;background:#0f172a;border:1px solid #22d3ee;border-radius:8px;padding:5px 10px;font-size:11px;pointer-events:none;z-index:10001;display:none;}
+
+        /* ===== 分支提示 ===== */
+        .branch-hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.95);background:rgba(8,16,28,0.98);backdrop-filter:blur(24px);border-radius:32px;padding:28px 32px;text-align:center;border:2px solid #f59e0b;z-index:20000;opacity:0;pointer-events:none;transition:0.3s;width:380px;box-shadow:0 20px 40px rgba(0,0,0,0.6);}
+        .branch-hint.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+        .branch-hint h3{font-size:24px;color:#fbbf24;margin-bottom:8px;}
+        .branch-hint p{font-size:13px;color:#94a3b8;margin-bottom:20px;}
+
+        /* ===== Toast ===== */
+        .toast-notice{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:#000000dd;backdrop-filter:blur(20px);padding:14px 28px;border-radius:60px;color:white;font-weight:bold;font-size:16px;z-index:20001;opacity:0;transition:0.4s;pointer-events:none;white-space:nowrap;}
+        .toast-notice.show{opacity:1;transform:translate(-50%,-50%) scale(1.05);}
+
+        /* ===== InfoWindow ===== */
+        .custom-info-window{position:absolute;background:#1e293b;color:#e2e8f0;border-left:4px solid #22d3ee;border-radius:14px;padding:10px 14px;max-width:260px;font-size:12px;box-shadow:0 6px 16px rgba(0,0,0,0.5);z-index:10000;backdrop-filter:blur(8px);}
+        .custom-info-window .close-btn{position:absolute;top:6px;right:10px;cursor:pointer;color:#94a3b8;font-size:14px;}
+        .custom-info-window .title{font-weight:700;color:#22d3ee;margin-bottom:4px;font-size:13px;padding-right:16px;}
+
+        /* ===== 沉浸模式 ===== */
+        body.immersive-mode .story-panel,
+        body.immersive-mode .right-stack,
+        body.immersive-mode .mission-float{opacity:0;pointer-events:none;}
+        body.immersive-mode .story-panel{transform:translateX(-420px);}
+        body.immersive-mode .right-stack{transform:translateX(290px);}
+        body.immersive-mode .mission-float{transform:translateY(100px);}
+        body.immersive-mode .chapter-bar{opacity:0.3;}
+        body.immersive-mode .top-right-controls{opacity:0.3;}
+
+        /* ===== 箭头动画 ===== */
+        @keyframes arrowBounce{0%,100%{transform:translateY(0);opacity:1;}50%{transform:translateY(-10px);opacity:0.7;}}
+
+        @media (max-width:800px){
+            .story-panel,.riding-panel{width:calc(100% - 40px);left:20px;top:100px;max-height:45vh;}
+            .right-stack{width:calc(100% - 40px);left:20px;right:20px;bottom:20px;}
+            .top-right-controls{top:72px;right:20px;left:auto;}
+            .chapter-bar{top:10px;left:10px;right:10px;}
+            .mission-float{width:calc(100% - 40px);left:20px;bottom:20px;}
+            .top-banner{font-size:12px;padding:10px 18px;}
+            .knowledge-grid{grid-template-columns:repeat(2,1fr);}
+        }
+        @media (max-width:500px){
+            .knowledge-grid{grid-template-columns:1fr;}
         }
     </style>
 </head>
 <body>
-    <div id="map-container"></div>
-    <div class="chapter-bar">
-        <div class="chapter-step active" data-phase="begin" data-chapter-start="0">东南启程</div>
-        <div class="chapter-step" data-phase="develop" data-chapter-start="2">西南寻幽</div>
-        <div class="chapter-step" data-phase="climax" data-chapter-start="5">西北逐风</div>
-        <div class="chapter-step" data-phase="end" data-chapter-start="8">北归终章</div>
+
+<div id="map-container"></div>
+
+<!-- 开场引导 -->
+<div class="intro-modal" id="introModal">
+    <div class="intro-content">
+        <h2>🚴‍♂️ 轮迹中国</h2>
+        <h3>GIS专业实地研学报告 · 交互指南</h3>
+        <p class="intro-lead">2023年6月，我带着一辆单车和一台GPS，想用车轮丈量课本上的等高线。从闽江口的南北两港出发，到青藏高原的3D隆起，这是一份用14000公里写成的GIS实地研学报告。</p>
+        <div class="intro-section">
+            <div class="intro-item"><span class="intro-icon">🔴🔵</span><div><strong>发现点</strong><br>地图上的红/蓝色圆点可点击，查看地理信息与研学笔记</div></div>
+            <div class="intro-item"><span class="intro-icon">📊</span><div><strong>骑行数据面板</strong><br>右侧记录累计里程、海拔、途经省份等GIS时空数据</div></div>
+            <div class="intro-item"><span class="intro-icon">📖</span><div><strong>研学日记</strong><br>点击右侧"日记 ▼"可展开全程站点列表，随时跳转回顾</div></div>
+            <div class="intro-item"><span class="intro-icon">🎯</span><div><strong>地图任务</strong><br>每站需完成地图操作（缩放/切换图层/点击等），回答地理问题</div></div>
+            <div class="intro-item"><span class="intro-icon">➡️</span><div><strong>下一站</strong><br>完成任务后，上方会出现"下一站"按钮，手动推进旅程</div></div>
+            <div class="intro-item"><span class="intro-icon">❓</span><div><strong>任务提示</strong><br>左下角任务浮窗可随时查看当前任务，点击标题可折叠</div></div>
+        </div>
+        <button class="intro-btn" onclick="closeIntro()">开始旅程</button>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="top-right-controls">
-        <button class="btn btn-auto" id="autoBtn">▶ 自动播放</button>
-        <button class="btn btn-reset" id="resetBtn">↺ 重置</button>
-        <button class="btn btn-layer" id="layerBtn">标准图</button>
-        <select id="speedSelect" class="speed-select">
-            <option value="1.0">速度 x1</option>
-            <option value="1.5">速度 x1.5</option>
-            <option value="2.0">速度 x2</option>
-        </select>
+</div>
+
+<!-- 章节过渡 -->
+<div class="chapter-transition" id="chapterTransition">
+    <div class="transition-content">
+        <div class="transition-phase" id="transitionPhase"></div>
+        <div class="transition-title" id="transitionTitle"></div>
+        <div class="transition-desc" id="transitionDesc"></div>
+        <div class="transition-next" id="transitionNext"></div>
     </div>
-    <div class="story-panel" id="storyPanel">
-        <div class="dedication" id="dedication"></div>
+</div>
+
+<!-- 终章弹窗 -->
+<div class="ending-modal" id="endingModal">
+    <div class="ending-content">
+        <h2>🏁 14000公里闭环</h2>
+        <p>从这儿走的，回这儿来。这是一份用车轮写成的中国地理体检报告。</p>
+        <div class="ending-stats">
+            <div><strong>910</strong>天</div>
+            <div><strong>14000</strong>km</div>
+            <div><strong>14</strong>省</div>
+        </div>
+        <button class="intro-btn" onclick="showKnowledgeMap()">🗺️ 查看GIS知识图谱</button>
+        <button class="intro-btn" onclick="location.reload()" style="background:linear-gradient(135deg,#64748b,#475569);margin-top:10px;">↺ 重新开始</button>
+    </div>
+</div>
+
+<!-- 知识图谱 -->
+<div class="knowledge-map" id="knowledgeMap">
+    <div class="knowledge-content">
+        <h2>🗺️ 14000km GIS 研学知识图谱</h2>
+        <p class="knowledge-subtitle">从闽江口到闭环原点，9个站点的空间分析方法论</p>
+        <div class="knowledge-grid" id="knowledgeGrid"></div>
+        <div class="knowledge-summary">
+            <strong>核心结论：</strong>骑行轨迹的弯曲度反映了地形阻隔与河流山脉的走向。实际路径与直线距离的差异可用"弯曲度指数"量化，是地形对人文活动空间约束的直接体现。
+        </div>
+        <button class="intro-btn" onclick="closeKnowledgeMap()" style="max-width:200px;margin:0 auto;">关闭图谱</button>
+    </div>
+</div>
+
+<!-- 任务弹窗 -->
+<div class="mission-popup" id="missionPopup">
+    <h3>📍 地图任务</h3>
+    <div id="missionPopupText"></div>
+    <div class="mission-popup-hint">💡 关闭后可在左下角浮窗随时查看任务</div>
+    <button class="mission-popup-btn" onclick="closeMissionPopup()">知道了，开始探索</button>
+</div>
+
+<!-- 任务浮窗 -->
+<div class="mission-float" id="missionFloat">
+    <div class="mission-header" onclick="toggleMissionFloat()">
+        <span>🎯 当前地图任务</span>
+        <span id="missionToggle">▶</span>
+    </div>
+    <div class="mission-body hidden" id="missionBody"></div>
+</div>
+
+<!-- 顶部横幅 -->
+<div class="top-banner" id="topBanner">
+    ✅ 任务完成！请点击「下一站」继续旅程 ➡️
+</div>
+
+<div class="chapter-bar">
+    <div class="chapter-step active" data-phase="begin" data-idx="0">东南启程 · 闽地</div>
+    <div class="chapter-step" data-phase="develop" data-idx="2">西南寻幽 · 山水</div>
+    <div class="chapter-step" data-phase="climax" data-idx="5">西北逐风 · 大漠</div>
+    <div class="chapter-step" data-phase="end" data-idx="8">北归终章 · 原点</div>
+</div>
+
+<div class="top-right-controls">
+    <button class="btn btn-reset" id="resetBtn">↺ 重置旅程</button>
+    <button class="btn btn-layer" id="layerBtn">标准地图</button>
+    <select id="speedSelect"><option value="1.0">速度 x1</option><option value="1.5">速度 x1.5</option><option value="2.0">速度 x2</option></select>
+    <button class="btn btn-immersive" id="immersiveBtn">🗺️ 沉浸</button>
+    <button class="btn btn-next" id="panelNextBtn">➡️ 下一站</button>
+</div>
+
+<div class="story-panel" id="storyPanel">
+    <div class="collapse-btn" id="collapseBtn">◀</div>
+    <div class="panel-content">
+        <div class="author-line">林宇浩 · 福建农林大学 · 空间信息与数字技术 · 2023级</div>
         <div class="phase-tag" id="phaseTag"></div>
         <div class="station-title" id="stationTitle"></div>
         <div class="station-date" id="stationDate"></div>
-        <img class="story-img" id="storyImg" alt="">
-        <div class="station-desc" id="stationDesc"></div>
-        <div class="quiz-area" id="quizArea">
-            <div id="quizQuestion"></div>
-            <div><input type="text" id="quizAnswer" placeholder="输入答案"><button id="submitQuiz">回答</button></div>
-            <div id="quizFeedback" class="quiz-feedback"></div>
+        <div class="data-pills" id="dataPills"></div>
+        <img class="story-img" id="storyImg" alt="站点实景" loading="lazy">
+
+        <div class="narrative-box">
+            <div class="narrative-label diary">📓 骑行日记</div>
+            <div class="narrative-text" id="diaryContent"></div>
         </div>
-        <div class="nav-buttons">
-            <button class="nav-btn nav-prev" id="panelPrevBtn">◀ 上一站</button>
-            <button class="nav-btn nav-next" id="panelNextBtn">下一站 ▶</button>
+        <div class="narrative-box">
+            <div class="narrative-label gis">🛰️ GIS笔记</div>
+            <div class="narrative-text" id="gisContent"></div>
         </div>
     </div>
-    <div class="riding-panel" id="ridingPanel">
-        <div class="riding-status"><div class="riding-dot"></div><span id="ridingText">骑行中 · 前往下一站</span></div>
-        <div class="riding-route" id="ridingRoute"></div>
-        <div class="riding-info" id="ridingInfo"></div>
-    </div>
+</div>
+
+<div class="riding-panel" id="ridingPanel">
+    <div class="riding-status"><div class="riding-dot"></div><span id="ridingText">车轮滚滚</span></div>
+    <div class="riding-route" id="ridingRoute"></div>
+    <div class="riding-info" id="ridingInfo"></div>
+</div>
+
+<div class="right-stack" id="rightStack">
     <div class="data-panel">
-        <div class="data-title">骑行实时数据</div>
-        <div class="data-item"><span>已骑行天数</span><span id="data_days">0</span></div>
+        <div class="data-title">📊 骑行数据 <span class="toggle-journal" id="toggleJournal">📖 日记 ▼</span></div>
+        <div class="data-item"><span>骑行天数</span><span id="data_days">0</span></div>
         <div class="data-item"><span>累计里程</span><span id="data_km">0 km</span></div>
         <div class="data-item"><span>途经省份</span><span id="data_prov">1</span></div>
         <div class="data-item"><span>当前海拔</span><span id="data_alt">0 m</span></div>
-        <div class="data-item"><span>当前阶段</span><span id="data_stage">东南启程</span></div>
+        <div class="data-item"><span>最高海拔</span><span id="maxAlt">0 m</span></div>
+        <div class="journal" id="journal"></div>
     </div>
-    <div class="slider-panel">
-        <span class="slider-label">🗺️ 里程滑条</span>
-        <input type="range" id="mileageSlider" min="0" max="14000" value="0" step="10">
-        <span id="sliderKm" class="slider-label">0 km</span>
+    <div class="elevation-panel">
+        <div class="elevation-title">⛰️ 海拔剖面 <span>悬停看数据</span></div>
+        <canvas id="elevationCanvas" width="400" height="130"></canvas>
     </div>
-    <div class="climax-toast" id="climaxToast">🔥 进入高潮 · 青藏高原</div>
-    <div class="ending-toast" id="endingToast">💜 圆满闭环<br>我用代码理解这片土地，幻想中的我，用车轮亲吻了它。</div>
+</div>
 
-    <script>
-        // 地图初始化
-        const map = new BMapGL.Map("map-container");
+<div class="branch-hint" id="branchHint">
+    <h3>🗺️ 成都 · 抉择时刻</h3>
+    <p>318零公里，两条天路。<br>点击地图上<span style="color:#ef4444;font-weight:700;">红色路线</span>（青藏线）或<span style="color:#f59e0b;font-weight:700;">橙色路线</span>（河西走廊）决定方向</p>
+</div>
+
+<div class="toast-notice" id="climaxToast">🔥 抵达圣城拉萨 · 视角切换地球模式 + 3D倾斜</div>
+<div class="ele-tooltip" id="eleTooltip"></div>
+
+<script>
+    /* ==================== 地图初始化 ==================== */
+    let map = null;
+    let mapReady = false;
+    try {
+        map = new BMapGL.Map("map-container");
         const startPt = new BMapGL.Point(119.3002, 26.0805);
-        map.centerAndZoom(startPt, 11);
+        map.centerAndZoom(startPt, 12);
         map.enableScrollWheelZoom(true);
         map.setMapType(BMAP_NORMAL_MAP);
-        map.addControl(new BMapGL.ScaleControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT}));
-        
-        const altitudes = [20,20,150,2000,500,3650,1500,20];
-        const layerModes = [
-            {type: BMAP_NORMAL_MAP, name: "标准图"},
-            {type: BMAP_SATELLITE_MAP, name: "卫星图"},
-            {type: BMAP_EARTH_MAP, name: "地球模式"}
-        ];
-        
-        // 站点数据（原版不变）
-        const baseStory = [
-            {pt:startPt,name:"福州",title:"榕树下的出发",phase:"begin",stage:"东南启程",date:"2023-06-10",zoom:11,mapType:BMAP_NORMAL_MAP,dedication:"这个故事是假的。现实中我进入福建农林大学就读空间信息与数字技术专业。但幻想中的我，用车轮亲吻了课堂上处理过的每一寸土地。",desc:"六月的福州闷得要死，空气像一块湿毛巾捂在脸上。我在闽江边站了很久——每年这个时候我都说要走，但真要走的那天，还是犹豫了。我在车把绑了一面小旗子，写着：出发。",days:0,km:0,prov:1,img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.VO9i_416Zf2_vGnM6rUbLQAAAA?w=257&h=193&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"福州的别称是？",a:"榕城"}},
-            {pt:new BMapGL.Point(118.6759,24.8744),name:"泉州",title:"古建地标活了",phase:"begin",stage:"东南启程",date:"2023-06-13",zoom:13,mapType:BMAP_NORMAL_MAP,dedication:"GIS实验课上的历史建筑空间定位，我站在这里了。",desc:"红砖老厝，满街烟火气。面线糊加油条，一口下去整个人活了。开元寺东西塔伫立千年，课堂标注的古建坐标，此刻就在头顶。经纬度是死的，风是活的。",days:3,km:180,prov:1,img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.WjIHpCqAwfvYgbERRfjKHwHaE7?w=300&h=199&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"泉州在宋元时期是什么港？",a:"东方第一大港"}},
-            {pt:new BMapGL.Point(110.1794,25.2345),name:"桂林",title:"DEM照进现实",phase:"develop",stage:"西南寻幽",date:"2023-07-05",zoom:12,mapType:BMAP_SATELLITE_MAP,dedication:"GIS实验课上处理过的喀斯特地貌DEM，终于见到实景。",desc:"山从平地冒出来，像馒头。漓江上坐竹筏，船夫说从没见过骑车旅行的人。我处理过这里的DEM，知道每座山的海拔，但站在山脚下，感觉完全不同。",days:25,km:1230,prov:4,img:"https://tse3-mm.cn.bing.net/th/id/OIP-C.GJbAxrPLItNInO_TLDEsQHaE8?w=256&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"桂林山水属于什么地貌？",a:"喀斯特"}},
-            {pt:new BMapGL.Point(100.2257,25.5894),name:"大理",title:"洱海骑行日",phase:"develop",stage:"西南寻幽",date:"2023-09-01",zoom:12,mapType:BMAP_SATELLITE_MAP,dedication:"从日出骑到日落，左边苍山，右边洱海。",desc:"洱海一圈130公里，从日出到日落。左边苍山，右边洱海，中间一条路。遥感影像里洱海是蓝色眼睛，我绕着她骑了一天，风里都是自由的味道。",days:83,km:2430,prov:6,img:"https://tse2-mm.cn.bing.net/th/id/OIP-C.eF6xZwn1IwGoK1UcAthNqAHaFj?w=266&h=200&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"与苍山相伴的湖泊是？",a:"洱海"}},
-            {pt:new BMapGL.Point(104.0665,30.5723),name:"成都",title:"318零公里",phase:"develop",stage:"西南寻幽",date:"2023-11-15",zoom:12,mapType:BMAP_NORMAL_MAP,dedication:"318国道零公里，每一块里程碑都是经纬度坐标。",desc:"吃火锅、看熊猫。最触动我的是318零公里路牌，无数骑行者从这里去拉萨。我学空间定位，这一刻，我自己就是那个移动的定位点。",days:158,km:3330,prov:7,img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.WU5zm17SfZmmUVEs0BNfXQHaE7?w=226&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"318国道的零公里位于哪个城市？",a:"成都"}},
-            {pt:new BMapGL.Point(91.1409,29.6500),name:"拉萨",title:"站在卫星影像里",phase:"climax",stage:"西北逐风",date:"2024-08-01",zoom:13,mapType:BMAP_NORMAL_MAP,dedication:"卫星影像上的地方，我站在了这里。",desc:"最难、最震撼的一段。青藏线海拔超5000米，高反头疼欲裂，但看到布达拉宫的那一刻，一切都值得。卫星图上的圣地，我亲自抵达。",days:418,km:7430,prov:11,img:"https://tse3-mm.cn.bing.net/th/id/OIP-C.TcA75iulva1F5mVO-shepAHaE7?w=227&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",isClimax:true,quiz:{q:"布达拉宫位于哪个城市？",a:"拉萨"},lockLayer:BMAP_EARTH_MAP},
-            {pt:new BMapGL.Point(98.2773,39.7866),name:"嘉峪关",title:"长城的尽头",phase:"climax",stage:"西北逐风",date:"2024-03-20",zoom:12,mapType:BMAP_SATELLITE_MAP,dedication:"打开地图，坐标我记得很熟。但不是看数据，是站在这里。",desc:"兰州牛肉面，只有兰州才正宗。嘉峪关是长城的尽头，城墙外一片戈壁。河西走廊数字化制图我做过很多次，但站在这里，风里都是沙子。",days:284,km:5030,prov:9,img:"https://tse4-mm.cn.bing.net/th/id/OIP-C.BZT8tDWOqtBZUkkRMtAdUwHaE7?w=268&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"明长城西端起点是？",a:"嘉峪关"}},
-            {pt:new BMapGL.Point(94.6003,40.1356),name:"敦煌",title:"丝路印记",phase:"climax",stage:"西北逐风",date:"2024-10-01",zoom:12,mapType:BMAP_SATELLITE_MAP,dedication:"GIS里的古丝绸之路节点，沙漠中的绿洲。",desc:"鸣沙山、月牙泉，在卫星图上是沙漠中的蓝色光点。千年丝路，坐标永恒，我站在这里，触摸历史与GIS的交汇点。",days:480,km:9200,prov:12,img:"https://tse2-mm.cn.bing.net/th/id/OIP-C.7Z7F07Z7Q8X0ZQ8X0Z8X0ZAAAA?w=260&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",quiz:{q:"敦煌最著名的石窟是？",a:"莫高窟"}},
-            {pt:startPt,name:"福州",title:"从这儿走的",phase:"end",stage:"北归终章",date:"2025-12-01",zoom:11,mapType:BMAP_NORMAL_MAP,dedication:"我用代码理解土地，幻想用车轮亲吻它。两种方式，我都走完了中国。",desc:"两年半，绕中国一圈。自行车换了三套胎，驮包磨破洞。回到福州，闷热依旧，空气黏湿。我吃了锅边糊，老板问从哪来。我说：从这儿走的。",days:910,km:14000,prov:14,img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.v-FFPI0yoFyIl5_G8fCwrwHaE6?w=254&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",isEnd:true,quiz:{q:"骑行的起点和终点是？",a:"福州"}}
-        ];
+        mapReady = true;
+    } catch(e) {
+        console.error("地图初始化失败:", e);
+        document.getElementById("map-container").innerHTML = 
+            '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#22d3ee;text-align:center;z-index:99999;padding:20px;">' +
+            '<h2 style="margin-bottom:10px;">🗺️ 地图加载失败</h2>' +
+            '<p style="color:#e2e8f0;font-size:14px;">请通过 <strong style="color:#facc15;">本地服务器</strong> 访问本页面</p>' +
+            '<p style="color:#94a3b8;font-size:12px;margin-top:12px;line-height:1.6;">不要直接双击打开 HTML 文件<br>推荐使用 VS Code Live Server 插件<br>或命令行运行：<br><code style="background:#1e293b;padding:4px 8px;border-radius:4px;">python -m http.server 8000</code></p>' +
+            '</div>';
+    }
+    const layerModes = [{type:BMAP_NORMAL_MAP,name:"标准地图"},{type:BMAP_SATELLITE_MAP,name:"卫星影像"},{type:BMAP_EARTH_MAP,name:"地球3D"}];
 
-        let storyData = [...baseStory];
-        let branchApplied = false;
-        let lhasaUnlocked = false;
-        let idx = 0, isMoving = false, isAuto = false, layerIdx = 0;
-        let MOVE_STEP = 200, MOVE_DELAY = 80, STAY_TIME = 13000;
-        
-        // 骑行路线与骑手
-        const rider = new BMapGL.Marker(startPt,{
-            icon: new BMapGL.Icon("https://api.map.baidu.com/images/markers/green.png", new BMapGL.Size(28,28), {anchor: new BMapGL.Size(14,14)})
+    /* ==================== 站点数据 ==================== */
+    const baseSites = [
+        { name:"福州", pt:startPt, title:"榕城出发·GIS原点", phase:"begin", stage:"东南启程", date:"2023.06.10", zoom:13, mapType:BMAP_NORMAL_MAP, days:0, km:0, prov:1, alt:20,
+          diary:"打开地图，将视角缩放到闽江口附近。肉眼就能看到闽江在这里分成两股水道：北边一条窄线直插福州城区，南边一片宽浅的网状河道，上面还点缀着沙洲。我的车轮将从这里出发，先学会像水一样寻找最宽的路径。",
+          gis:"闽江下游在淮安分成南北两港：北港穿福州城区，河道窄深，最窄处枯水水面宽仅130m，主槽水深1.5-3m；南港绕南台岛南面，宽浅多汊，最宽处达4600m，沙洲浅滩发育，是主要泄洪排沙河道。这种'北港窄深、南港宽浅'的分汊形态，是河流动力地貌的经典案例。",
+          img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.VO9i_416Zf2_vGnM6rUbLQAAAA?w=257&h=193&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"🌊 地图任务：缩放至 zoom ≥ 14，找到金色💡标记附近的闽江入海口。观察南北两港的形态差异。问题：北港和南港，哪个更适合泄洪排沙？为什么？",
+          taskHint:"滚轮放大到14级以上，拖动地图至闽江口附近，观察哪条河道更宽、沙洲更多。",
+          taskConclusion:"南港宽浅多汊，最宽处达4600m，沙洲浅滩发育，是主要泄洪排沙河道。",
+          trigger:"zoom", requiredZoom:14,
+          pills:["🌊 闽江分汊","📐 南北港形态","🗺️ 河流动力地貌"],
+          observation:{pt:new BMapGL.Point(119.55,26.12),label:"闽江入海口附近 · 放大观察南北港分汊"},
+          discoveries:[
+              {type:"blue",title:"闽江入海口附近",content:"喇叭状河口与红树林湿地，GIS水系经典案例",offsetLng:0.22,offsetLat:0.035},
+              {type:"red",title:"出发地·骑友赠言",content:"“兄弟带上补胎工具，路还长。”第一声鼓励",offsetLng:-0.02,offsetLat:-0.02}
+          ]
+        },
+        { name:"泉州", pt:new BMapGL.Point(118.6759,24.8744), title:"宋元古港·海丝起点", phase:"begin", stage:"东南启程", date:"2023.06.13", zoom:14, mapType:BMAP_NORMAL_MAP, days:3, km:180, prov:1, alt:20,
+          diary:"点击地图上蓝色标记附近的开元寺，这座宋代古塔曾是海船的灯塔。当我缩小地图查看泉州湾整体时，发现古港所在的海岸线已经外扩——晋江携带的泥沙把曾经的深水港变成了浅滩，港口不得不向石湖港等深水区迁移。没有GIS的年代，古人用塔定位；今天我用坐标理解城市的兴衰。",
+          gis:"泉州港在宋元时期为'东方第一大港'，与70多个国家和地区通航。但明清以降，因晋江泥沙淤积、海禁政策及厦门港崛起，港口逐渐衰落。现代港口已外移至石湖港等深水港区。古港的兴衰，是河流泥沙动力学与港口选址的经典案例。",
+          img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.WjIHpCqAwfvYgbERRfjKHwHaE7?w=300&h=199&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"🏯 地图任务：点击蓝色发现点「开元寺附近」，然后缩放查看泉州湾整体形态。问题：古泉州港为何从'东方第一大港'衰落为区域性小港？",
+          taskHint:"点击地图上的蓝色圆点，再滚轮缩小查看泉州湾整体，注意海岸线变化与泥沙淤积。",
+          taskConclusion:"晋江泥沙淤积导致古港衰落，港口外迁至石湖港等深水区，是河流泥沙动力学与港口选址的经典案例。",
+          trigger:"discovery_click", requiredClicks:1,
+          pills:["⚓ 古港兴衰","🏗️ 港口选址","📉 泥沙淤积"],
+          discoveries:[
+              {type:"blue",title:"开元寺东西塔附近",content:"宋代古建地标，曾是海船导航的灯塔，GIS历史建筑空间定位案例",offsetLng:-0.10,offsetLat:0.05,taskTarget:true},
+              {type:"red",title:"西街烟火",content:"老板多送一根油条：“一路向西”",offsetLng:-0.01,offsetLat:-0.01}
+          ]
+        },
+        { name:"桂林", pt:new BMapGL.Point(110.1794,25.2345), title:"喀斯特DEM·山水入画", phase:"develop", stage:"西南寻幽", date:"2023.07.05", zoom:13, mapType:BMAP_NORMAL_MAP, days:25, km:1230, prov:4, alt:150,
+          diary:"切换到卫星影像图层，漓江峰丛附近的景象让我愣了一下——那些覆盖植被的山峰在假彩色影像上呈现出鲜红色，而山间的石灰岩洼地却是灰白的。我在地图上放大缩小反复确认：红色=健康植被=强近红外反射。课本上的光谱曲线突然有了颜色。",
+          gis:"桂林喀斯特为峰林平原型，相对高差150-300m。在标准假彩色卫星影像（近红外-红-绿波段组合）上，植被覆盖的峰林因强烈反射近红外光而呈鲜红色；裸露的石灰岩洼地反射率低，呈灰白或青灰色。这是碳酸盐岩溶蚀作用的典型识别标志。",
+          img:"https://ts1.tc.mm.bing.net/th/id/OIP-C.SHHd1msNdH5KwJIBI-wUaAHaE7?w=193&h=135&c=8&rs=1&qlt=90&o=6&dpr=1.9&pid=3.1&rm=2",
+          task:"🛰️ 地图任务：切换至「卫星影像」图层，找到金色💡标记附近的漓江峰丛。观察峰林与洼地的色调差异。问题：在卫星图上，植被覆盖的峰林是什么颜色？",
+          taskHint:"点击右上角「标准地图」按钮，选择「卫星影像」，再放大到金色标记附近。注意植被的颜色。",
+          taskConclusion:"植被覆盖的峰林在假彩色卫星影像上呈鲜红色，裸露石灰岩洼地呈灰白或青灰色，是碳酸盐岩溶蚀作用的典型识别标志。",
+          trigger:"layer_switch", requiredLayer:BMAP_SATELLITE_MAP,
+          pills:["⛰️ 喀斯特峰林","🛰️ 假彩色影像","🔴 近红外反射"],
+          observation:{pt:new BMapGL.Point(110.45,25.06),label:"漓江峰丛附近 · 切换卫星图观察纹理"},
+          discoveries:[
+              {type:"blue",title:"漓江峰丛附近",content:"世界喀斯特遗产，卫星图可见峰丛洼地纹理",offsetLng:0.25,offsetLat:-0.15},
+              {type:"red",title:"竹筏船夫",content:"“骑车来的？头一个见。”",offsetLng:-0.02,offsetLat:-0.02}
+          ]
+        },
+        { name:"大理", pt:new BMapGL.Point(100.2257,25.5894), title:"洱海遥感·蓝色眼睛", phase:"develop", stage:"西南寻幽", date:"2023.09.01", zoom:13, mapType:BMAP_SATELLITE_MAP, days:83, km:2430, prov:6, alt:2000,
+          diary:"切换到卫星影像图层，苍山洱海附近的景象让我愣了一下——苍山顶部的雪线在影像上呈现出亮白色，而洱海却是一片深蓝。我在地图上放大确认：白色=冰雪=高反射率；深蓝=水体=近红外强吸收。课本上的光谱曲线突然有了颜色。",
+          gis:"洱海为高原断陷湖泊，湖面海拔1972m；苍山最高峰马龙峰海拔4122m，相对高差2150m。这种剧烈的地形起伏是印度板块与欧亚板块碰撞的产物，也是高原湖泊与高山垂直带谱研究的天然实验室。",
+          img:"https://tse2-mm.cn.bing.net/th/id/OIP-C.eF6xZwn1IwGoK1UcAthNqAHaFj?w=266&h=200&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"⛰️ 地图任务：保持在「卫星影像」图层，缩放至 zoom ≥ 13，观察苍山雪线与洱海的色调边界。问题：苍山与洱海的相对高差是多少米？",
+          taskHint:"确认卫星影像模式，放大到13级以上，观察苍山（白色山顶）与洱海（深蓝湖面）的交界。",
+          taskConclusion:"苍山4122m-洱海1972m，垂直高差2150m，是印度板块与欧亚板块碰撞的产物，高原湖泊与高山垂直带谱的天然实验室。",
+          trigger:"zoom", requiredZoom:13,
+          pills:["🏔️ 垂直带谱","📊 相对高差2150m","🌊 高原断陷湖"],
+          discoveries:[
+              {type:"blue",title:"苍山洱海附近",content:"苍山4122m-洱海1972m，垂直高差2150m",offsetLng:-0.03,offsetLat:0.08,taskTarget:true},
+              {type:"red",title:"环湖小队",content:"结伴骑行130km，交换进藏路线",offsetLng:-0.01,offsetLat:-0.02}
+          ]
+        },
+        { name:"成都", pt:new BMapGL.Point(104.0665,30.5723), title:"318零公里·抉择之地", phase:"develop", stage:"西南寻幽", date:"2023.11.15", zoom:12, mapType:BMAP_NORMAL_MAP, days:158, km:3330, prov:7, alt:500,
+          diary:"在318零公里路牌附近，我摊开电子地形图。向西看，等高线像被揉乱的纸，海拔从成都平原的500米骤然拔升到横断山区的5000米以上；向北看，河西走廊的等高线稀疏平缓，沿着第二级阶梯边缘缓缓爬升。地图不会骗人——西边的路要翻越十四座高山，海拔变化剧烈得多。",
+          gis:"成都平原海拔约500m，向西仅几十公里即进入邛崃山-横断山区，海拔骤升至5000m以上；向北沿河西走廊行进，海拔缓慢爬升至1500m左右。两条路线的垂直梯度差异巨大：青藏线跨越第一、二级阶梯，河西走廊沿第二级阶梯边缘。",
+          img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.WU5zm17SfZmmUVEs0BNfXQHaE7?w=226&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"🗺️ 抉择任务：点击蓝色发现点「318零公里路牌附近」，然后缩放至 zoom 10，观察成都平原与青藏高原的过渡带。问题：哪条路线的海拔变化更剧烈？点击地图上的红色或橙色路线做出选择。",
+          taskHint:"点击蓝色圆点 → 放大 → 观察地形 → 点击红线（青藏）或橙线（河西）",
+          taskConclusion:"成都平原海拔500m，向西几十公里即进入5000m以上横断山区；向北沿河西走廊海拔缓慢爬升至1500m。两条路线的垂直梯度差异巨大。",
+          trigger:"discovery_click", requiredClicks:1, isBranch:true,
+          pills:["🗺️ 318零公里","📈 海拔梯度","🔀 路线抉择"],
+          discoveries:[
+              {type:"blue",title:"318零公里路牌附近",content:"无数骑友朝圣起点，G318国道地理原点",offsetLng:-0.015,offsetLat:0.08,taskTarget:true},
+              {type:"red",title:"火锅店老板",content:"多送两份酥肉：“吃饱了翻山”",offsetLng:-0.01,offsetLat:-0.01}
+          ]
+        },
+        { name:"拉萨", pt:new BMapGL.Point(91.1409,29.6500), title:"圣城·布达拉", phase:"climax", stage:"西北逐风", date:"2024.08.01", zoom:14, mapType:BMAP_NORMAL_MAP, days:418, km:7430, prov:11, alt:3650, isClimax:true,
+          diary:"切换到地球3D模式，倾斜视角看布达拉宫附近。红山像一座突然隆起的火山，宫堡建筑群沿着山体垂直堆叠。我在地图上测量：拉萨市区海拔约3650米，布达拉宫最高处约3767米，相对高差约117米。GIS笔记上的DEM高程数据在这里变成了真实的立体地形，每一步攀登都在对抗这100多米的垂直高差。",
+          gis:"布达拉宫位于红山之巅，最高处海拔约3767m（拉萨市区海拔约3650m）。利用DEM数据可提取其三维形态：红山相对地面高差约70-100m，宫堡建筑群高117m。这是藏式建筑与山地地形完美结合的典型案例。",
+          img:"https://tse3-mm.cn.bing.net/th/id/OIP-C.TcA75iulva1F5mVO-shepAHaE7?w=227&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"🌍 地图任务：切换至「地球3D」模式，倾斜视角（按住右键拖动），找到金色💡标记附近的布达拉宫。观察红山的三维隆起。问题：布达拉宫的海拔比拉萨市区高出多少米？",
+          taskHint:"点击右上角「标准地图」→「地球3D」，然后按住鼠标右键拖拽倾斜视角，找到金色标记附近。",
+          taskConclusion:"布达拉宫最高处海拔约3767m，红山相对地面高差约70-100m，宫堡建筑群高117m，是藏式建筑与山地地形完美结合的典型案例。",
+          trigger:"earth_mode", requiredMode:BMAP_EARTH_MAP,
+          pills:["🏛️ 布达拉宫","📐 DEM三维形态","🌍 地球3D模式"],
+          observation:{pt:new BMapGL.Point(91.121986,29.658261),label:"布达拉宫附近 · 地球3D模式观察三维隆起"},
+          discoveries:[
+              {type:"blue",title:"布达拉宫附近",content:"红山之巅，地球模式可见三维隆起",offsetLng:-0.018,offsetLat:0.008},
+              {type:"red",title:"哈达祝福",content:"藏族阿妈：“你走了很远的路”",offsetLng:-0.008,offsetLat:-0.01}
+          ]
+        },
+        { name:"嘉峪关", pt:new BMapGL.Point(98.2773,39.7866), title:"长城尽头·戈壁孤城", phase:"climax", stage:"西北逐风", date:"2024.03.20", zoom:13, mapType:BMAP_SATELLITE_MAP, days:284, km:5030, prov:9, alt:1500,
+          diary:"在卫星影像上，嘉峪关城楼附近有一条浅色的细线蜿蜒在灰褐色的戈壁中。我点击蓝色标记放大观察：夯土的反射率中等，呈土黄色；而戈壁砾石因表面风化壳反射率更高，呈灰白色。这条'人造光谱带'在遥感影像上清晰可辨——古代没有卫星，但长城本身就是一条等待被遥感识别的线性特征。",
+          gis:"嘉峪关夯土城墙与戈壁滩的反射率存在差异：干燥夯土在可见光-近红外波段反射率中等（呈土黄色至浅褐色），戈壁砾石因表面风化壳反射率较高（呈灰白色）。在Landsat多光谱影像上，通过波段比值运算可增强墙体与背景的对比度，这是遥感考古的典型方法。",
+          img:"https://tse4-mm.cn.bing.net/th/id/OIP-C.BZT8tDWOqtBZUkkRMtAdUwHaE7?w=268&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"🏯 地图任务：保持在「卫星影像」图层，缩放至 zoom ≥ 15，找到蓝色发现点「嘉峪关城楼附近」。观察城墙的线性痕迹。问题：卫星图上，城墙与戈壁滩哪个更亮？为什么？",
+          taskHint:"滚轮放大到15级以上，观察嘉峪关城墙与周边戈壁的亮度差异。",
+          taskConclusion:"干燥夯土反射率中等呈土黄色，戈壁砾石因风化壳反射率较高呈灰白色，通过波段比值运算可增强墙体与背景对比度。",
+          trigger:"zoom", requiredZoom:15,
+          pills:["🏯 夯土城墙","📡 遥感考古","⚖️ 反射率差异"],
+          discoveries:[
+              {type:"blue",title:"嘉峪关城楼附近",content:"戈壁中的线性城墙遗迹，遥感考古典型案例",offsetLng:-0.05,offsetLat:0.025,taskTarget:true},
+              {type:"red",title:"守关老人",content:"“骑车来的？头一个”",offsetLng:-0.01,offsetLat:-0.008}
+          ]
+        },
+        { name:"敦煌", pt:new BMapGL.Point(94.6003,40.1356), title:"丝路明珠·月牙泉", phase:"climax", stage:"西北逐风", date:"2024.10.01", zoom:13, mapType:BMAP_SATELLITE_MAP, days:480, km:9200, prov:12, alt:1100,
+          diary:"点击地图上月牙泉附近的蓝色标记。在卫星影像上，这汪泉水呈现出近乎黑色的深蓝——水体在近红外波段几乎吸收所有能量，反射率接近零。沙漠里的这滴'黑色眼泪'，在遥感影像上反而最容易识别。风沙吹了一千年，它还在，因为地下潜流在GIS的水文分析中是一条看不见的蓝色脉络。",
+          gis:"水体对电磁波的吸收特性独特：在可见光波段反射率较低（4-10%），在近红外及中红外波段（0.76-2.5μm）吸收极强、反射率接近零。因此无论在真彩色还是假彩色卫星影像上，清澈水体均呈深蓝至黑色。月牙泉虽小，但因水质清澈，光谱特征明显，是沙漠绿洲水体识别的典型案例。",
+          img:"https://ts1.tc.mm.bing.net/th/id/OIP-C.xdvpO_jto_WcJU8l5pYbFQHaE7?w=193&h=135&c=8&rs=1&qlt=90&o=6&dpr=1.9&pid=3.1&rm=2",
+          task:"💧 地图任务：在「卫星影像」图层上，缩放至 zoom ≥ 14，拖动地图使月牙泉居中，观察水体与沙丘的色调差异。问题：水体在卫星图上为什么是深色的？",
+          taskHint:"放大到14级，拖动地图让月牙泉位于屏幕中央，注意它与沙漠的颜色对比。",
+          taskConclusion:"水体在近红外及中红外波段吸收极强、反射率接近零，因此卫星图上清澈水体呈深蓝至黑色，月牙泉是沙漠绿洲水体识别的典型案例。",
+          trigger:"zoom", requiredZoom:14,
+          pills:["💧 沙漠绿洲","🌊 水体光谱","🔵 近红外吸收"],
+          discoveries:[
+              {type:"blue",title:"月牙泉附近",content:"沙漠绿洲，卫星图上呈深蓝至黑色的光谱特征",offsetLng:0.08,offsetLat:-0.03,taskTarget:true},
+              {type:"red",title:"沙漠星空",content:"银河像GIS点云一样在头顶展开",offsetLng:-0.008,offsetLat:-0.008}
+          ]
+        },
+        { name:"福州", pt:startPt, title:"闭环原点·从这儿走的", phase:"end", stage:"北归终章", date:"2025.12.01", zoom:10, mapType:BMAP_NORMAL_MAP, days:910, km:14000, prov:14, alt:20, isEnd:true,
+          diary:"缩小地图到全国视角，起点和终点在屏幕上几乎重合于福州市区附近。但右侧数据面板告诉我：我已经骑行了14000公里，途经14个省级行政区。GIS中的'线长度'与'直线距离'差异，在这里被我的车轮实证了——山脉与河流的阻隔让轨迹弯曲，实际里程约为直线距离的数倍。我带着这份中国地理的'体检报告'回到了原点。",
+          gis:"起点终点经纬度重合，形成闭环。总里程约14000km，覆盖中国三大地貌阶梯（东部平原、中部高原、西部山地），途经14个省级行政区。骑行轨迹的弯曲度反映了地形阻隔与河流山脉的走向。在GIS中，这种实际路径与直线距离的差异可用'弯曲度指数'量化，是地形对人文活动空间约束的直接体现。",
+          img:"https://tse1-mm.cn.bing.net/th/id/OIP-C.v-FFPI0yoFyIl5_G8fCwrwHaE6?w=254&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+          task:"🏁 终章任务：缩小地图至全国视角（zoom 5-6），用鼠标目测起点到终点的直线距离。问题：实际骑行里程约是直线距离的多少倍？这反映了GIS中什么概念？",
+          taskHint:"滚轮缩小至看到全国，观察福建到福建的直线，对比右侧的14000km数据。",
+          taskConclusion:"总里程约14000km，覆盖中国三大地貌阶梯，途经14个省级行政区。实际路径与直线距离的差异可用弯曲度指数量化，是地形对人文活动空间约束的直接体现。",
+          trigger:"zoom", requiredZoom:6,
+          pills:["🔄 14000km闭环","📏 弯曲度指数","🗺️ 14省覆盖"],
+          discoveries:[
+              {type:"blue",title:"原点回归附近",content:"14000km闭环，14省，起点终点重合",offsetLng:0.01,offsetLat:0.008}
+          ]
+        }
+    ];
+
+    baseSites.forEach(s => s._taskCompleted = false);
+
+    const branchRoutes = { qingzang:[0,1,2,3,4,5,8], hexi:[0,1,2,3,4,6,7,8] };
+    let storyData = [...baseSites.slice(0,5)], branchApplied = false, idx = 0, isMoving = false, layerIdx = 0;
+    let moveStep = 200, moveDelay = 80, stayTime = 5000, maxAltitude = 0;
+    let activeInfoWindows = [], discoveryCircles = [], branchPolylines = [], stationMarkers = [];
+    let observationLabel = null;
+    const rider = new BMapGL.Marker(startPt, { icon: new BMapGL.Icon("https://api.map.baidu.com/images/markers/orange.png", new BMapGL.Size(36,36), {anchor:new BMapGL.Size(18,18)}) });
+    const dynamicLine = new BMapGL.Polyline([startPt], { strokeColor: "#facc15", strokeWeight: 5, strokeOpacity: 0.9 });
+    map.addOverlay(rider); map.addOverlay(dynamicLine);
+
+    /* ==================== 工具函数 ==================== */
+    function clearArrows() {
+        discoveryCircles.forEach(c => { if (c._arrow) { map.removeOverlay(c._arrow); c._arrow = null; } });
+        if (observationLabel && observationLabel._arrow) { map.removeOverlay(observationLabel._arrow); observationLabel._arrow = null; }
+    }
+
+    function setObservation(pt, text, showArrow = false) {
+        clearObservation();
+        observationLabel = new BMapGL.Label('💡', { position: pt, offset: new BMapGL.Size(-15, -15) });
+        observationLabel.setStyle({
+            color:'#78350f', backgroundColor:'#fbbf24', border:'2px solid #ffffff', borderRadius:'50%', padding:'0',
+            fontSize:'16px', boxShadow:'0 0 16px rgba(251,191,36,0.7), 0 4px 12px rgba(0,0,0,0.4)',
+            textAlign:'center', lineHeight:'30px', width:'30px', height:'30px', fontFamily:'Segoe UI, sans-serif', cursor:'default'
         });
-        map.addOverlay(rider);
-        
-        const dynamicLine = new BMapGL.Polyline([startPt], {
-            strokeColor:"#14b8a6", strokeWeight:5
+        observationLabel.setTitle(text);
+        map.addOverlay(observationLabel);
+        if (showArrow) {
+            let arrow = new BMapGL.Label('⬇', { position: pt, offset: new BMapGL.Size(-10, -45) });
+            arrow.setStyle({ color:'#facc15', fontSize:'22px', background:'transparent', border:'none', fontWeight:'bold', textShadow:'0 0 10px rgba(0,0,0,0.9)', animation:'arrowBounce 1.2s infinite' });
+            map.addOverlay(arrow);
+            observationLabel._arrow = arrow;
+        }
+    }
+
+    function clearObservation() {
+        if (observationLabel) {
+            map.removeOverlay(observationLabel);
+            if (observationLabel._arrow) { map.removeOverlay(observationLabel._arrow); observationLabel._arrow = null; }
+            observationLabel = null;
+        }
+    }
+
+    function updateChapterSteps(){
+    const steps=document.querySelectorAll(".chapter-step");
+    const phaseFirstIdx={};
+    storyData.forEach((s,i)=>{if(phaseFirstIdx[s.phase]===undefined)phaseFirstIdx[s.phase]=i;});
+    steps.forEach(step=>{
+        const phase=step.dataset.phase;
+        if(phaseFirstIdx[phase]!==undefined){
+            step.dataset.idx=phaseFirstIdx[phase];
+            step.style.opacity="1"; step.style.pointerEvents="auto"; step.style.cursor="pointer";
+        }else{
+            step.style.opacity="0.35"; step.style.pointerEvents="none"; step.style.cursor="default";
+            step.classList.remove("active");
+        }
+    });
+}
+function refreshData(){
+        let c=storyData[idx];
+        document.getElementById("data_days").innerText=c.days;
+        document.getElementById("data_km").innerText=c.km+" km";
+        document.getElementById("data_prov").innerText=c.prov;
+        document.getElementById("data_alt").innerText=c.alt+" m";
+        if(c.alt>maxAltitude){maxAltitude=c.alt; document.getElementById("maxAlt").innerText=maxAltitude+" m";}
+        drawElevationProfile();
+    }
+
+    function updateChapter(){
+        document.querySelectorAll(".chapter-step").forEach(step=>step.classList.remove("active"));
+        const mapPhase={begin:0,develop:1,climax:2,end:3};
+        let p=mapPhase[storyData[idx].phase];
+        if(p!==undefined) document.querySelectorAll(".chapter-step")[p]?.classList.add("active");
+    }
+
+    function renderJournal(){
+        let j = document.getElementById("journal");
+        j.innerHTML = '';
+        storyData.forEach((s, i) => {
+            let div = document.createElement("div");
+            div.className = "journal-entry" + (i === idx ? " active" : "") + (i > idx ? " future" : "");
+            div.innerHTML = `<strong>${s.name}</strong> · ${s.diary.substring(0,65)}...`;
+            div.onclick = () => { if(!isMoving) jumpToStation(i); };
+            j.appendChild(div);
         });
-        map.addOverlay(dynamicLine);
-        
-        const stationMarkers = [];
-        storyData.forEach((station,i) => {
-            const marker = new BMapGL.Marker(station.pt);
-            marker.addEventListener("click", () => {
-                if(!isMoving) jumpToStation(i);
+        let activeEntry = j.querySelector(".active");
+        if(activeEntry) activeEntry.scrollIntoView({block: "nearest", behavior: "smooth"});
+    }
+
+    function clearDiscoveries(){
+        discoveryCircles.forEach(c => { map.removeOverlay(c); if(c._arrow) map.removeOverlay(c._arrow); });
+        discoveryCircles = [];
+    }
+    function closeAllInfoWindows(){ activeInfoWindows.forEach(w=>w.remove()); activeInfoWindows=[]; }
+    function createInfoWindow(pt,title,content){
+        let pixel=map.pointToPixel(pt);
+        let div=document.createElement("div");
+        div.className="custom-info-window";
+        div.style.left=(pixel.x+15)+"px";
+        div.style.top=(pixel.y-50)+"px";
+        div.innerHTML=`<div class="close-btn">✕</div><div class="title">${title}</div><div>${content}</div>`;
+        div.querySelector(".close-btn").onclick=()=>{div.remove();activeInfoWindows=activeInfoWindows.filter(w=>w!==div);};
+        document.body.appendChild(div);
+        activeInfoWindows.push(div);
+    }
+
+    function drawDiscoveries(){
+        clearDiscoveries();
+        let curr=storyData[idx];
+        if(!curr.discoveries) return;
+        curr.discoveries.forEach(d=>{
+            let pt=new BMapGL.Point(curr.pt.lng+d.offsetLng, curr.pt.lat+d.offsetLat);
+            let color=d.type==="blue"?"#3b82f6":"#ef4444";
+            let label=new BMapGL.Label('',{position:pt,offset:new BMapGL.Size(-14,-14)});
+            label.setStyle({
+                width:'28px',height:'28px',borderRadius:'50%',backgroundColor:color,
+                border:'2px solid rgba(255,255,255,0.9)',boxShadow:`0 0 12px ${color}`,cursor:'pointer'
             });
-            map.addOverlay(marker);
-            stationMarkers.push(marker);
+            label.setTitle(d.title);
+            label.addEventListener("click",()=>{
+                createInfoWindow(pt,d.title,d.content);
+                if(curr.trigger==="discovery_click" && !isMoving && !curr._taskCompleted && d.taskTarget){
+                    completeCurrentTask();
+                    if(curr.isBranch){ drawBranchRoutes(); }
+                }
+            });
+            map.addOverlay(label);
+            discoveryCircles.push(label);
+            if(d.taskTarget && !curr._taskCompleted){
+                let arrow=new BMapGL.Label('⬇',{position:pt,offset:new BMapGL.Size(-10,-42)});
+                arrow.setStyle({color:'#facc15',fontSize:'20px',background:'transparent',border:'none',fontWeight:'bold',textShadow:'0 0 8px rgba(0,0,0,0.9)',animation:'arrowBounce 1.2s infinite'});
+                map.addOverlay(arrow);
+                label._arrow=arrow;
+            }
         });
-        
-        // 速度控制
-        document.getElementById("speedSelect").addEventListener("change", (e) => {
-            const v = parseFloat(e.target.value);
-            MOVE_DELAY = 80 / v;
-            STAY_TIME = 13000 / v;
-        });
-        
-        // 章节切换
-        function updateChapter() {
-            document.querySelectorAll(".chapter-step").forEach(step => {
-                step.classList.toggle("active", step.dataset.phase === storyData[idx].phase);
+    }
+
+    function updateNextButton(){
+        const btn=document.getElementById("panelNextBtn");
+        const curr=storyData[idx];
+        if(curr._taskCompleted || curr.trigger==="none"){
+            btn.classList.add("show");
+            btn.innerHTML=idx===storyData.length-1?"🏁 旅程结束":"➡️ 下一站";
+            btn.disabled=false;
+        }else{
+            btn.classList.remove("show");
+        }
+    }
+
+    function drawBranchRoutes(){
+        let chengdu=storyData[idx].pt, lhasaPt=baseSites[5].pt, jygPt=baseSites[6].pt;
+        map.setViewport([chengdu, lhasaPt, jygPt], {enableAnimation:true});
+        let qzGlow=new BMapGL.Polyline([chengdu,lhasaPt],{strokeColor:"#ef4444",strokeWeight:18,strokeOpacity:0.3});
+        let qzLine=new BMapGL.Polyline([chengdu,lhasaPt],{strokeColor:"#ef4444",strokeWeight:6,strokeOpacity:0.9});
+        let hxGlow=new BMapGL.Polyline([chengdu,jygPt],{strokeColor:"#f59e0b",strokeWeight:18,strokeOpacity:0.3});
+        let hxLine=new BMapGL.Polyline([chengdu,jygPt],{strokeColor:"#f59e0b",strokeWeight:6,strokeOpacity:0.9});
+        [qzGlow,hxGlow,qzLine,hxLine].forEach(p=>map.addOverlay(p));
+        branchPolylines=[qzGlow,hxGlow,qzLine,hxLine];
+
+        // 路线标签
+        let qzLabel = new BMapGL.Label('🚩 G318 青藏线',{position:new BMapGL.Point((chengdu.lng+lhasaPt.lng)/2,(chengdu.lat+lhasaPt.lat)/2),offset:new BMapGL.Size(-50,-20)});
+        qzLabel.setStyle({color:'#ef4444',fontSize:'13px',fontWeight:'bold',background:'rgba(8,16,28,0.8)',border:'1px solid #ef4444',borderRadius:'8px',padding:'4px 10px'});
+        map.addOverlay(qzLabel);
+        let hxLabel = new BMapGL.Label('🚩 河西走廊',{position:new BMapGL.Point((chengdu.lng+jygPt.lng)/2,(chengdu.lat+jygPt.lat)/2),offset:new BMapGL.Size(-40,-20)});
+        hxLabel.setStyle({color:'#f59e0b',fontSize:'13px',fontWeight:'bold',background:'rgba(8,16,28,0.8)',border:'1px solid #f59e0b',borderRadius:'8px',padding:'4px 10px'});
+        map.addOverlay(hxLabel);
+        branchPolylines.push(qzLabel, hxLabel);
+
+        const selectRoute=(route)=>{
+            if(branchApplied)return;
+            branchApplied=true;
+            document.getElementById("branchHint").classList.remove("show");
+            clearBranchRoutes();
+            let indices=branchRoutes[route];
+            storyData=indices.map(i=>baseSites[i]);
+
+            // 应用分支色调
+            let panel=document.getElementById("storyPanel");
+            panel.classList.remove("branch-qingzang","branch-hexi");
+            if(route==="qingzang") panel.classList.add("branch-qingzang");
+            else panel.classList.add("branch-hexi");
+
+            stationMarkers.forEach(m=>map.removeOverlay(m));
+            stationMarkers=[];
+            storyData.forEach((s,i)=>{
+                let m=new BMapGL.Marker(s.pt);
+                m.addEventListener("click",()=>{if(!isMoving)jumpToStation(i);});
+                map.addOverlay(m);
+                stationMarkers.push(m);
+            });
+            storyData[idx]._taskCompleted=true;
+            clearArrows();
+            renderJournal();
+            updateNextButton();
+            updateMissionFloat();
+            updateChapterSteps();
+        };
+        qzLine.addEventListener("click",()=>selectRoute("qingzang"));
+        hxLine.addEventListener("click",()=>selectRoute("hexi"));
+        setTimeout(()=>document.getElementById("branchHint").classList.add("show"),1500);
+    }
+    function clearBranchRoutes(){ branchPolylines.forEach(p=>map.removeOverlay(p)); branchPolylines=[]; }
+
+    function drawElevationProfile(){
+        let canvas=document.getElementById("elevationCanvas");
+        let ctx=canvas.getContext("2d");
+        let rect=canvas.getBoundingClientRect();
+        let dpr=window.devicePixelRatio||1;
+        canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+        ctx.scale(dpr,dpr);
+        let w=rect.width, h=rect.height, pad={top:10,right:20,bottom:25,left:40}, cw=w-pad.left-pad.right, ch=h-pad.top-pad.bottom;
+        let routeData=[];
+        for(let i=0;i<=idx;i++){let s=storyData[i]; routeData.push({name:s.name,km:s.km,alt:s.alt});}
+        if(routeData.length===0)return;
+        let maxKm=14000, maxAlt=4000;
+        ctx.clearRect(0,0,w,h);
+        for(let i=0;i<=5;i++){
+            let y=pad.top+ch*(i/5);
+            ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.strokeStyle="rgba(255,255,255,0.06)";ctx.stroke();
+            ctx.fillStyle="#64748b";ctx.font="10px sans-serif";ctx.fillText(Math.round(maxAlt*(1-i/5))+"m",pad.left-6,y+3);
+        }
+        for(let i=0;i<=7;i++){
+            let x=pad.left+cw*(i/7);
+            ctx.beginPath();ctx.moveTo(x,pad.top);ctx.lineTo(x,pad.top+ch);ctx.strokeStyle="rgba(255,255,255,0.06)";ctx.stroke();
+            ctx.fillStyle="#64748b";ctx.fillText(Math.round(maxKm*(i/7)/1000)+"k",x-6,pad.top+ch+14);
+        }
+        if(routeData.length>=2){
+            ctx.beginPath();
+            routeData.forEach((p,i)=>{
+                let x=pad.left+cw*(p.km/maxKm);
+                let y=pad.top+ch*(1-p.alt/maxAlt);
+                if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            });
+            ctx.strokeStyle="#22d3ee";ctx.lineWidth=2.5;ctx.stroke();
+        }
+        let curr=routeData[routeData.length-1];
+        let cx=pad.left+cw*(curr.km/maxKm), cy=pad.top+ch*(1-curr.alt/maxAlt);
+        ctx.fillStyle="#facc15";ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();
+
+        canvas.onmousemove=(e)=>{
+            let rect=canvas.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+            if(mx < pad.left||mx>w-pad.right||my < pad.top||my>h-pad.bottom){document.getElementById("eleTooltip").style.display="none";return;}
+            let kmRatio=(mx-pad.left)/cw; let kmVal=Math.round(kmRatio*maxKm); let altVal=Math.round((1-(my-pad.top)/ch)*maxAlt);
+            let tip=document.getElementById("eleTooltip"); tip.style.display="block"; tip.style.left=(e.clientX+15)+"px"; tip.style.top=(e.clientY-30)+"px";
+            tip.innerHTML=`里程: ${kmVal} km<br>海拔: ${altVal} m`;
+        };
+        canvas.onmouseleave=()=>{document.getElementById("eleTooltip").style.display="none";};
+    }
+
+    function showRiding(fromIdx,toIdx){
+        document.getElementById("storyPanel").classList.add("riding-hidden");
+        document.getElementById("rightStack").classList.add("riding-hidden");
+        document.getElementById("missionFloat").classList.add("riding-hidden");
+        document.getElementById("storyPanel").style.display="none";
+        document.getElementById("ridingPanel").classList.add("active");
+        let from=storyData[fromIdx], to=storyData[toIdx];
+        let dist=Math.round(to.km-from.km), days=to.days-from.days;
+        document.getElementById("ridingText").innerHTML=`🚴‍♂️ ${from.name} → ${to.name}`;
+        document.getElementById("ridingRoute").innerHTML=`📏 ${dist} km · 🗓️ ${days} 天<br>${from.name} → ${to.name}`;
+        document.getElementById("ridingInfo").innerHTML=`✨ 地图视角自动跟随，跨越山河。下一站：${to.name} ✨`;
+        refreshData(); updateChapter();
+    }
+
+    /* ==================== 章节过渡 ==================== */
+    function showChapterTransition(fromPhase, toPhase, callback){
+        let transition=document.getElementById("chapterTransition");
+        let data={
+            "begin-develop":{phase:"东南启程 · 完结",title:"从海风到山风",desc:"从闽江口的分汊河道，到宋元古港的淤泥岸线。我们学会了用GIS的视角看海岸。",next:"下一站：西南寻幽 · 喀斯特与高原湖泊"},
+            "develop-climax":{phase:"西南寻幽 · 完结",title:"从山水到大漠",desc:"从喀斯特峰林的假彩色纹理，到高原湖泊的垂直带谱。地图上的色调，变成了身体的记忆。",next:"下一站：西北逐风 · 戈壁与丝路"},
+            "climax-end":{phase:"西北逐风 · 完结",title:"从大漠到原点",desc:"从长城尽头的遥感考古，到沙漠绿洲的光谱识别。14000公里的闭环，即将完成。",next:"下一站：北归终章 · 从这儿走的，回这儿来"}
+        };
+        let key=fromPhase+"-"+toPhase;
+        let d=data[key];
+        if(!d){callback();return;}
+        document.getElementById("transitionPhase").innerText=d.phase;
+        document.getElementById("transitionTitle").innerText=d.title;
+        document.getElementById("transitionDesc").innerText=d.desc;
+        document.getElementById("transitionNext").innerText=d.next;
+        transition.classList.add("show");
+        setTimeout(()=>{
+            transition.classList.remove("show");
+            setTimeout(callback,300);
+        },2500);
+    }
+
+    /* ==================== 任务系统 ==================== */
+    function completeCurrentTask(){
+        let curr=storyData[idx];
+        if(curr._taskCompleted)return;
+        curr._taskCompleted=true;
+        clearArrows();
+        showTopBanner();
+        updateNextButton();
+        updateMissionFloat();
+    }
+
+    function showTopBanner(){
+        let banner=document.getElementById("topBanner");
+        banner.classList.add("show");
+        setTimeout(()=>banner.classList.remove("show"),5000);
+    }
+
+    function showMissionPopup(curr){
+        let textDiv=document.getElementById("missionPopupText");
+        let stageLabel=idx===0?"🚩 起点":idx===storyData.length-1?"🏁 终点":`📍 ${curr.stage}`;
+        textDiv.innerHTML=`<strong>${stageLabel}</strong><br><br>${curr.task}`;
+        document.getElementById("missionPopup").classList.add("show");
+        document.getElementById("missionBody").innerHTML=curr.task+"<br><br><em>💡 "+curr.taskHint+"</em>";
+    }
+    function closeMissionPopup(){
+        document.getElementById("missionPopup").classList.remove("show");
+        document.getElementById("missionFloat").style.display="block";
+    }
+    function updateMissionFloat(){
+        let curr=storyData[idx];
+        let body=document.getElementById("missionBody");
+        if(curr._taskCompleted){
+            body.innerHTML=`<div style="color:#4ade80;font-weight:700;margin-bottom:6px;">✅ 任务完成</div>
+            <div style="color:#e2e8f0;font-size:12px;line-height:1.6;">${curr.taskConclusion||"任务已完成，可前往下一站。"}</div>
+            <div style="color:#94a3b8;font-size:11px;margin-top:8px;font-style:italic;">点击上方「下一站」继续旅程</div>`;
+        }else{
+            body.innerHTML=curr.task+"<br><br><em>💡 "+curr.taskHint+"</em>";
+        }
+    }
+    function toggleMissionFloat(){
+        let body=document.getElementById("missionBody");
+        let toggle=document.getElementById("missionToggle");
+        if(body.classList.contains("hidden")){
+            body.classList.remove("hidden");
+            toggle.innerText="▼";
+        }else{
+            body.classList.add("hidden");
+            toggle.innerText="▶";
+        }
+    }
+
+    function showStation(){
+        let curr=storyData[idx];
+        document.getElementById("ridingPanel").classList.remove("active");
+        document.getElementById("storyPanel").style.display="block";
+        document.getElementById("storyPanel").classList.remove("riding-hidden");
+        document.getElementById("rightStack").classList.remove("riding-hidden");
+        document.getElementById("missionFloat").classList.remove("riding-hidden");
+
+        document.getElementById("stationTitle").innerText=curr.title;
+        document.getElementById("stationDate").innerText=curr.date;
+        document.getElementById("storyImg").src=curr.img;
+        document.getElementById("diaryContent").innerText=curr.diary;
+        document.getElementById("gisContent").innerText=curr.gis;
+
+        // data pills
+        let pillsDiv=document.getElementById("dataPills");
+        pillsDiv.innerHTML="";
+        if(curr.pills){
+            curr.pills.forEach(p=>{
+                let span=document.createElement("span");
+                span.className="data-pill";
+                span.innerText=p;
+                pillsDiv.appendChild(span);
             });
         }
-        
-        // 进度更新
-        function updateProgress() {
-            const p = (idx / (storyData.length - 1)) * 100;
-            document.getElementById("progressFill").style.width = p + "%";
-            document.getElementById("mileageSlider").value = storyData[idx].km;
-            document.getElementById("sliderKm").innerText = storyData[idx].km + " km";
-        }
-        
-        // 数据刷新
-        function refreshData() {
-            const curr = storyData[idx];
-            document.getElementById("data_days").innerText = curr.days;
-            document.getElementById("data_km").innerText = curr.km + " km";
-            document.getElementById("data_prov").innerText = curr.prov;
-            document.getElementById("data_alt").innerText = altitudes[idx] + " m";
-            document.getElementById("data_stage").innerText = curr.stage;
-            updateProgress();
-        }
-        
-        // 显示站点
-        function showStation() {
-            document.getElementById("storyPanel").classList.add("show");
-            document.getElementById("ridingPanel").classList.remove("active");
-            dynamicLine.hide();
-            
-            const curr = storyData[idx];
-            document.getElementById("dedication").innerText = curr.dedication;
-            document.getElementById("phaseTag").className = "phase-tag phase-" + curr.phase;
-            document.getElementById("phaseTag").innerText = curr.stage;
-            document.getElementById("stationTitle").innerHTML = `${idx === 0 ? "🚩起点" : idx === storyData.length - 1 ? "🏁终点" : `📍${idx+1}站`} | ${curr.name}·${curr.title}`;
-            document.getElementById("stationDate").innerText = curr.date;
-            document.getElementById("stationDesc").innerHTML = curr.desc;
-            document.getElementById("storyImg").src = curr.img;
-            
-            refreshData();
-            updateChapter();
-            map.centerAndZoom(curr.pt, curr.zoom);
-            map.setMapType(curr.mapType);
-            document.getElementById("layerBtn").innerText = layerModes.find(m => m.type === map.getMapType())?.name || "标准图";
-            
-            if(curr.isClimax) {
-                document.getElementById("climaxToast").classList.add("show");
-                setTimeout(() => document.getElementById("climaxToast").classList.remove("show"), 4000);
-            }
-            if(curr.isEnd) {
-                document.getElementById("endingToast").classList.add("show");
-                setTimeout(() => document.getElementById("endingToast").classList.remove("show"), 6000);
-            }
-            
-            // 刷新题目
-            if(curr.quiz) {
-                document.getElementById("quizQuestion").innerText = `📖 ${curr.quiz.q}`;
-                document.getElementById("quizArea").style.display = "block";
-                document.getElementById("quizAnswer").value = "";
-                document.getElementById("quizFeedback").innerText = "";
-            } else {
-                document.getElementById("quizArea").style.display = "none";
-            }
-            
-            if(curr.name === "成都" && !branchApplied) {
-                applyBranch();
-            }
-            checkLayerForLhasa();
-            // 绘制红蓝小点（纯新增，不改动任何原有代码）
-            drawStationPoints();
-        }
-        
-        // ====================== 精准恢复：骑行中完整文字叙述 ======================
-        function showRiding(fromIdx, toIdx){ 
-            document.getElementById('storyPanel').classList.remove('show');
-            document.getElementById('ridingPanel').classList.add('active');
-            const from = storyData[fromIdx], to = storyData[toIdx];
-            const dist = Math.round(to.km - from.km), days = to.days - from.days;
-            document.getElementById('ridingText').innerHTML = `🚴 骑行中 · ${from.name} → ${to.name}`;
-            let routeDesc = "";
-            if(from.name==="福州"&&to.name==="泉州") routeDesc="沿海岸线南下，红砖古厝渐多，闽南烟火气越来越浓";
-            else if(from.name==="泉州"&&to.name==="桂林") routeDesc="穿越粤北湘南，喀斯特地貌初现，山水渐入佳境";
-            else if(from.name==="桂林"&&to.name==="大理") routeDesc="经云贵高原，海拔渐升，苍山洱海遥遥在望";
-            else if(from.name==="大理"&&to.name==="成都") routeDesc="穿越横断山边缘，进入四川盆地，抵达318起点";
-            else if(from.name==="成都"&&to.name==="拉萨") routeDesc="青藏线天路，翻越5000米海拔，直达雪域圣城";
-            else if(from.name==="成都"&&to.name==="嘉峪关") routeDesc="沿河西走廊西进，戈壁大漠与长城遗迹相伴";
-            else if(from.name==="嘉峪关"&&to.name==="敦煌") routeDesc="穿越戈壁无人区，抵达丝路明珠敦煌";
-            else if(from.name==="敦煌"&&to.name==="福州") routeDesc="跨越大半个中国，从西北戈壁回到东南沿海";
-            else if(from.name==="拉萨"&&to.name==="福州") routeDesc="从雪域高原出发，穿越山川湖海，圆满归乡";
-            else routeDesc=`穿越千里山河，一路风景相伴前行`;
-            
-            document.getElementById('ridingRoute').innerHTML = `从 <b>${from.name}</b> 出发，前往 <b>${to.name}</b><br>行程 <b>${dist}</b> 公里，历时 <b>${days}</b> 天`;
-            document.getElementById('ridingInfo').innerHTML = `<b>阶段：</b>${from.stage} → ${to.stage}<br><b>路线亮点：</b>${routeDesc}<br><b>GIS视角：</b>代码坐标化作真实车辙`;
-            refreshData(); updateChapter();
-        }
-        // ======================================================================
-        
-        // 移动到下一站
-        function moveNext() {
-            if(isMoving || idx >= storyData.length - 1) return;
-            isMoving = true;
-            const A = storyData[idx].pt;
-            const B = storyData[idx + 1].pt;
-            const oldIdx = idx;
-            idx++;
-            
-            dynamicLine.show();
-            map.setViewport([A, B]);
-            showRiding(oldIdx, idx);
-            
-            const path = [];
-            for(let i=0; i<=MOVE_STEP; i++) {
-                const t = i / MOVE_STEP;
-                path.push(new BMapGL.Point(
-                    A.lng + (B.lng - A.lng) * t,
-                    A.lat + (B.lat - A.lat) * t
-                ));
-            }
-            
-            let step = 0;
-            const interval = setInterval(() => {
-                rider.setPosition(path[step]);
-                dynamicLine.setPath([...dynamicLine.getPath(), path[step]]);
-                step++;
-                if(step >= path.length) {
-                    clearInterval(interval);
-                    isMoving = false;
-                    showStation();
-                    if(isAuto) setTimeout(moveNext, STAY_TIME);
-                }
-            }, MOVE_DELAY);
-        }
-        
-        // 跳转到指定站点
-        function jumpToStation(i) {
-            idx = i;
-            const fullPath = [storyData[0].pt];
-            for(let s=1; s<=idx; s++) {
-                const prev = storyData[s-1].pt;
-                const curr = storyData[s].pt;
-                for(let j=1; j<=10; j++) {
-                    const t = j / 10;
-                    fullPath.push(new BMapGL.Point(
-                        prev.lng + (curr.lng - prev.lng) * t,
-                        prev.lat + (curr.lat - prev.lat) * t
-                    ));
-                }
-            }
-            dynamicLine.setPath(fullPath);
-            rider.setPosition(storyData[idx].pt);
-            showStation();
-        }
-        
-        // 成都分支选择
-        function applyBranch() {
-            if(branchApplied) return;
-            const choice = confirm("🧭 到达成都，接下来你想？\n\n✅ 确定：走青藏线→拉萨（挑战高原）\n❌ 取消：走河西走廊→嘉峪关→敦煌（丝路风光）");
-            branchApplied = true;
-            if(choice) {
-                storyData = [baseStory[0],baseStory[1],baseStory[2],baseStory[3],baseStory[4],baseStory[5],baseStory[8]];
-            } else {
-                storyData = [baseStory[0],baseStory[1],baseStory[2],baseStory[3],baseStory[4],baseStory[6],baseStory[7],baseStory[8]];
-            }
-            idx = 4;
-            jumpToStation(4);
-        }
-        
-        // 拉萨图层检查
-        function checkLayerForLhasa() {
-            const curr = storyData[idx];
-            if(curr.name === "拉萨" && !lhasaUnlocked) {
-                if(map.getMapType() === curr.lockLayer) {
-                    lhasaUnlocked = true;
-                    alert("✅ 地球模式解锁成功！");
-                    document.getElementById("panelNextBtn").disabled = false;
-                } else {
-                    document.getElementById("panelNextBtn").disabled = true;
-                    document.getElementById("quizFeedback").innerText = "⚠️ 必须切换到地球模式才能继续！";
-                }
-            } else {
-                document.getElementById("panelNextBtn").disabled = false;
-            }
-        }
-        
-        // 答题提交
-        document.getElementById("submitQuiz").onclick = () => {
-            const curr = storyData[idx];
-            const ans = document.getElementById("quizAnswer").value.trim();
-            if(ans === curr.quiz.a) {
-                document.getElementById("quizFeedback").innerText = "✅ 回答正确！";
-            } else {
-                document.getElementById("quizFeedback").innerText = `❌ 正确答案：${curr.quiz.a}`;
-            }
-        };
-        
-        // 里程滑块
-        document.getElementById("mileageSlider").addEventListener("input", (e) => {
-            if(isMoving) return;
-            const km = parseInt(e.target.value);
-            document.getElementById("sliderKm").innerText = km + " km";
-            
-            let targetStation = storyData[0];
-            for(let s=1; s<storyData.length; s++) {
-                if(km <= storyData[s].km) {
-                    targetStation = storyData[s-1];
-                    break;
-                }
-            }
-            rider.setPosition(targetStation.pt);
-        });
-        
-        // 按钮事件
-        document.getElementById("panelNextBtn").onclick = () => {
-            if(!isMoving) moveNext();
-        };
-        document.getElementById("panelPrevBtn").onclick = () => {
-            if(idx > 0 && !isMoving) jumpToStation(idx - 1);
-        };
-        document.getElementById("autoBtn").onclick = () => {
-            if(isMoving) return;
-            isAuto = !isAuto;
-            document.getElementById("autoBtn").innerText = isAuto ? "⏸ 暂停" : "▶ 自动播放";
-            if(isAuto) setTimeout(moveNext, STAY_TIME);
-        };
-        document.getElementById("resetBtn").onclick = () => {
-            isAuto = false;
-            document.getElementById("autoBtn").innerText = "▶ 自动播放";
-            storyData = [...baseStory];
-            branchApplied = false;
-            lhasaUnlocked = false;
-            jumpToStation(0);
-        };
-        document.getElementById("layerBtn").onclick = () => {
-            layerIdx = (layerIdx + 1) % 3;
-            map.setMapType(layerModes[layerIdx].type);
-            document.getElementById("layerBtn").innerText = layerModes[layerIdx].name;
-            checkLayerForLhasa();
-        };
-        
-        // ==============================================
-        // 纯新增：红蓝小点（合适大小，不改动任何原有代码）
-        // ==============================================
-        const stationPoints = [];
-        const stationInfo = {
-            福州:{info:"福州，别称榕城，闽江穿城，气候闷热潮湿，是东南沿海重要中心城市。",event:"偶遇资深骑友，分享进藏路线经验，赠送修车工具。"},
-            泉州:{info:"泉州，宋元东方第一大港，古城完整，是海上丝绸之路起点城市。",event:"品尝地道面线糊，体力恢复满格，烟火气十足。"},
-            桂林:{info:"桂林，典型喀斯特地貌，漓江山水甲天下，是GIS地形经典案例城市。",event:"漓江船夫赠送山水纪念照，旅途回忆满满。"},
-            大理:{info:"大理，苍山洱海相伴，风景秀丽，是环湖骑行爱好者的胜地。",event:"偶遇骑行小队，结伴同行，旅途不再孤单。"},
-            成都:{info:"成都，318国道起点，进藏骑行大本营，火锅与熊猫是城市标志。",event:"火锅店老板赠送特色小吃，为进藏之旅加油。"},
-            拉萨:{info:"拉萨，青藏高原核心城市，布达拉宫地标，海拔高易高反的圣城。",event:"获得藏族同胞哈达祝福，高原旅途圆满。"},
-            嘉峪关:{info:"嘉峪关，明长城西端起点，河西走廊重镇，古丝绸之路交通要冲。",event:"聆听长城守护者讲述历史，感受历史厚重。"},
-            敦煌:{info:"敦煌，莫高窟与鸣沙山月牙泉闻名，古丝绸之路文化遗产城市。",event:"夜晚观赏沙漠星空，体验大漠独有的宁静壮阔。"}
-        };
 
-        // 绘制合适大小的红蓝小点
-        function drawStationPoints() {
-            stationPoints.forEach(p => map.removeOverlay(p));
-            stationPoints.length = 0;
+        const phaseClass={begin:"phase-begin",develop:"phase-develop",climax:"phase-climax",end:"phase-end"};
+        let tag=document.getElementById("phaseTag");
+        tag.className="phase-tag "+phaseClass[curr.phase];
+        tag.innerText=curr.stage;
 
-            storyData.forEach(sta => {
-                const name = sta.name;
-                if(!stationInfo[name]) return;
+        // 地图操作隔离，失败不影响 UI 渲染
+        if(mapReady && map){
+            try{
+                map.setMapType(curr.mapType);
+                if(curr.observation){
+                    setObservation(curr.observation.pt,curr.observation.label,true);
+                    map.setViewport([curr.pt,curr.observation.pt],{enableAnimation:true});
+                }else{
+                    map.centerAndZoom(curr.pt,curr.zoom);
+                }
+            }catch(e){ console.error("地图视角切换失败:", e); }
+        }
 
-                // 蓝色小点：当地介绍
-                const infoPt = new BMapGL.Point(sta.pt.lng + 0.01, sta.pt.lat + 0.01);
-                const infoCircle = new BMapGL.Circle(infoPt, 200, {
-                    fillColor:"#007bff", fillOpacity:0.7, strokeColor:"#fff", strokeWeight:1
+        drawDiscoveries();
+        refreshData(); updateChapter(); renderJournal(); updateNextButton(); updateMissionFloat();
+
+        if(curr.isClimax){ setTimeout(()=>document.getElementById("climaxToast").classList.add("show"),1000); setTimeout(()=>document.getElementById("climaxToast").classList.remove("show"),5000); }
+        if(curr.isEnd){
+            setTimeout(()=>{
+                document.getElementById("endingModal").classList.add("show");
+            },1500);
+        }
+    }
+
+    function jumpToStation(i){
+        idx=i;
+        closeAllInfoWindows(); clearObservation(); clearDiscoveries();
+        showStation();
+        if(i>0) dynamicLine.setPath(storyData.slice(0,i+1).map(s=>s.pt));
+    }
+
+    /* ==================== 移动逻辑 ==================== */
+    function moveToNext(){
+        if(isMoving||idx>=storyData.length-1)return;
+        if(window._movingLock)return;
+
+        let oldIdx=idx;
+        let newIdx=idx+1;
+
+        // 章节过渡检查
+        if(storyData[oldIdx].phase!==storyData[newIdx].phase){
+            showChapterTransition(storyData[oldIdx].phase,storyData[newIdx].phase,()=>{
+                executeMove(oldIdx,newIdx);
+            });
+            return;
+        }
+
+        executeMove(oldIdx,newIdx);
+    }
+
+    /* 安全清除地图覆盖物 */
+    function safeClearOverlays(){
+        if(!mapReady || !map) return;
+        try{ map.clearOverlays(); }catch(e){}
+    }
+
+    function executeMove(oldIdx,newIdx){
+        window._movingLock=true; isMoving=true;
+        closeAllInfoWindows(); clearObservation(); clearDiscoveries();
+        let A=storyData[oldIdx].pt, B=storyData[newIdx].pt;
+        idx=newIdx; 
+        if(mapReady && map){
+            dynamicLine.show(); dynamicLine.setPath([A]);
+            if(newIdx===storyData.length-1&&map.getMapType()===BMAP_EARTH_MAP){map.setMapType(BMAP_SATELLITE_MAP);}
+            const lngDiff=Math.abs(A.lng-B.lng), latDiff=Math.abs(A.lat-B.lat);
+            if(lngDiff>20||latDiff>15){map.setViewport([new BMapGL.Point(73.5,18.5),new BMapGL.Point(135.0,53.5)],{enableAnimation:true});}
+            else{map.setViewport([A,B]);}
+        }
+        showRiding(oldIdx,newIdx);
+        let path=[];
+        for(let i=0;i<=moveStep;i++){let t=i/moveStep; path.push(new BMapGL.Point(A.lng+(B.lng-A.lng)*t,A.lat+(B.lat-A.lat)*t));}
+        let step=0;
+        let interval=setInterval(()=>{
+            rider.setPosition(path[step]);
+            let curPath=dynamicLine.getPath(); curPath.push(path[step]); dynamicLine.setPath(curPath);
+
+            // 里程打点
+            if(step%30===0 && step>0 && step<path.length-1){
+                let dot=new BMapGL.Label('',{position:path[step],offset:new BMapGL.Size(-3,-3)});
+                dot.setStyle({
+                    width:'6px',height:'6px',borderRadius:'50%',
+                    backgroundColor:'#facc15',border:'none',
+                    boxShadow:'0 0 10px #facc15, 0 0 20px rgba(250,204,21,0.5)'
                 });
-                infoCircle.addEventListener("click", () => alert(`📍 ${name}介绍\n\n${stationInfo[name].info}`));
-                map.addOverlay(infoCircle);
-                stationPoints.push(infoCircle);
+                map.addOverlay(dot);
+                setTimeout(()=>map.removeOverlay(dot),1200);
+            }
 
-                // 红色小点：随机事件
-                const eventPt = new BMapGL.Point(sta.pt.lng - 0.01, sta.pt.lat - 0.01);
-                const eventCircle = new BMapGL.Circle(eventPt, 200, {
-                    fillColor:"#dc3545", fillOpacity:0.7, strokeColor:"#fff", strokeWeight:1
-                });
-                eventCircle.addEventListener("click", () => alert(`🎲 随机事件\n\n${stationInfo[name].event}`));
-                map.addOverlay(eventCircle);
-                stationPoints.push(eventCircle);
-            });
-        }
-        // ==============================================
+            step++;
+            if(step>=path.length){clearInterval(interval); isMoving=false; window._movingLock=false; showStation();}
+        },moveDelay);
+    }
 
-        // 初始化
-        jumpToStation(0);
-    </script>
+    /* ==================== 全局交互事件 ==================== */
+    function closeIntro(){
+        document.getElementById("introModal").style.display="none";
+        showMissionPopup(storyData[0]);
+    }
+    document.getElementById("resetBtn").addEventListener("click",()=>location.reload());
+    document.getElementById("layerBtn").addEventListener("click",()=>{
+        layerIdx=(layerIdx+1)%layerModes.length;
+        map.setMapType(layerModes[layerIdx].type);
+        document.getElementById("layerBtn").innerText=layerModes[layerIdx].name;
+    });
+    document.getElementById("speedSelect").addEventListener("change",(e)=>moveDelay=80/parseFloat(e.target.value));
+    document.getElementById("panelNextBtn").addEventListener("click",moveToNext);
+    document.getElementById("collapseBtn").addEventListener("click",()=>document.getElementById("storyPanel").classList.toggle("collapsed"));
+    document.getElementById("toggleJournal").addEventListener("click",()=>document.getElementById("journal").classList.toggle("show"));
+    document.getElementById("immersiveBtn").addEventListener("click",()=>{
+        document.body.classList.toggle("immersive-mode");
+        let isImmersive=document.body.classList.contains("immersive-mode");
+        document.getElementById("immersiveBtn").innerText=isImmersive?"⬅️ 恢复":"🗺️ 沉浸";
+    });
+    document.querySelectorAll(".chapter-step").forEach(step=>{
+        step.addEventListener("click",()=>{
+            if(isMoving) return;
+            const targetIdx=parseInt(step.dataset.idx);
+            if(targetIdx>=0 && targetIdx<storyData.length) jumpToStation(targetIdx);
+        });
+    });
+
+    /* ==================== 知识图谱 ==================== */
+    function showKnowledgeMap(){
+        let grid=document.getElementById("knowledgeGrid");
+        grid.innerHTML="";
+        storyData.forEach((s,i)=>{
+            let card=document.createElement("div");
+            card.className="knowledge-card";
+            let concepts=s.pills?s.pills.join(" · "):"GIS实地观测";
+            card.innerHTML=`<div class="knowledge-num">站点 ${i+1}</div><div class="knowledge-name">${s.name}</div><div class="knowledge-concept">${concepts}</div>`;
+            grid.appendChild(card);
+        });
+        document.getElementById("knowledgeMap").style.display="flex";
+        document.getElementById("knowledgeMap").classList.add("show");
+    }
+    function closeKnowledgeMap(){
+        document.getElementById("knowledgeMap").classList.remove("show");
+        setTimeout(()=>{document.getElementById("knowledgeMap").style.display="none";},300);
+    }
+
+    /* ==================== 地图事件监听 ==================== */
+    if(mapReady && map){
+        map.addEventListener("zoomend",()=>{
+            let curr=storyData[idx];
+            if(curr.trigger==="zoom"&&!curr._taskCompleted&&map.getZoom()>=curr.requiredZoom){
+                completeCurrentTask();
+            }
+        });
+    }
+    if(mapReady && map){
+        map.addEventListener("maptypechange",()=>{
+            let curr=storyData[idx];
+            let mt=map.getMapType();
+            if(curr.trigger==="layer_switch"&&!curr._taskCompleted&&mt===curr.requiredLayer){
+                completeCurrentTask();
+            }
+            if(curr.trigger==="earth_mode"&&!curr._taskCompleted&&mt===BMAP_EARTH_MAP){
+                completeCurrentTask();
+            }
+        });
+    }
+
+    /* ==================== 初始化启动 ==================== */
+    window.onload=()=>{
+        document.getElementById("introModal").style.display="flex";
+        document.getElementById("missionFloat").style.display="block";
+        document.getElementById("missionBody").classList.add("hidden");
+        document.getElementById("missionToggle").innerText="▶";
+        updateChapterSteps();
+        renderJournal();
+        showStation();
+    };
+</script>
 </body>
 </html>
-
