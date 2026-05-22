@@ -466,8 +466,8 @@ utton class="intro-btn" onclick="closeIntro()">开始旅程</button></div></div>
         document.getElementById("ridingPanel").classList.remove("active");
         document.getElementById("stationDropdown").classList.remove("show");
         document.getElementById("chengduReturnPopup").classList.remove("show");
-        document.getElementById("branchConfirmPopup")?.classList.remove("show");
-        document.getElementById("branchPreviewCard")?.classList.remove("show");
+        (document.getElementById("branchConfirmPopup") && document.getElementById("branchConfirmPopup").classList.remove("show"));
+        (document.getElementById("branchPreviewCard") && document.getElementById("branchPreviewCard").classList.remove("show"));
         // 关闭数据面板
         document.getElementById("dataShowPanel").classList.remove("show");
         showingDataPanel = false;
@@ -888,7 +888,7 @@ utton class="intro-btn" onclick="closeIntro()">开始旅程</button></div></div>
             card.classList.add("show");
         };
         const hidePreview = () => {
-            document.getElementById("branchPreviewCard")?.classList.remove("show");
+            (document.getElementById("branchPreviewCard") && document.getElementById("branchPreviewCard").classList.remove("show"));
         };
 
         qzHit.addEventListener("mouseover", (e)=>{ showPreview("qingzang", e.pixel || {x:window.innerWidth/2,y:window.innerHeight/2}); });
@@ -1015,7 +1015,7 @@ utton class="intro-btn" onclick="closeIntro()">开始旅程</button></div></div>
                 storyData = indices.map(i => ({...baseSites[i]}));
                 // 恢复状态
                 storyData.forEach((s, i)=>{
-                    let saved = state.storyDataStates?.find(ss=>ss.name===s.name);
+                    let saved = (state.storyDataStates && state.storyDataStates.find(ss=>ss.name===s.name));
                     if(saved){
                         s._taskCompleted = saved._taskCompleted;
                         s._taskShown = saved._taskShown;
@@ -1031,7 +1031,7 @@ utton class="intro-btn" onclick="closeIntro()">开始旅程</button></div></div>
             } else {
                 // 恢复主线状态
                 storyData.forEach((s, i)=>{
-                    let saved = state.storyDataStates?.find(ss=>ss.name===s.name);
+                    let saved = (state.storyDataStates && state.storyDataStates.find(ss=>ss.name===s.name));
                     if(saved){
                         s._taskCompleted = saved._taskCompleted;
                         s._taskShown = saved._taskShown;
@@ -1175,7 +1175,7 @@ utton class="intro-btn" onclick="closeIntro()">开始旅程</button></div></div>
         if(step.target === "observation" && storyData[idx].observation){
             targetPt = map.pointToPixel(storyData[idx].observation.pt);
         } else if(step.target === "discovery"){
-            let firstBlue = storyData[idx].discoveries?.find(d=>d.type==="blue");
+            let firstBlue = (storyData[idx].discoveries && storyData[idx].discoveries.find(d=>d.type==="blue"));
             if(firstBlue) targetPt = map.pointToPixel(firstBlue.pt);
         } else if(step.target === "mission"){
             targetPt = {x: 20 + 160, y: 120 + 50}; // missionFloat 大致位置
