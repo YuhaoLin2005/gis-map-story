@@ -136,6 +136,81 @@
             .data-show-grid{grid-template-columns:repeat(3,1fr);}
             .riding-panel{width:calc(100% - 40px);}
         }
+
+        /* ===== 游戏化HUD统一 ===== */
+        :root {
+            --primary: #22d3ee;
+            --primary-glow: rgba(34,211,238,0.4);
+            --accent: #facc15;
+            --danger: #ef4444;
+            --bg-card: rgba(8, 16, 28, 0.92);
+            --border-card: 1px solid rgba(34,211,238,0.3);
+            --radius-card: 20px;
+            --radius-btn: 40px;
+        }
+        /* 统一卡片容器 */
+        .intro-content,
+        .mission-popup,
+        .narrative-merged,
+        .data-show-panel,
+        .riding-panel,
+        .branch-hint,
+        .chengdu-return-popup,
+        .mission-float,
+        .station-dropdown,
+        .top-center-banner,
+        .top-right-controls,
+        #branchChoicePanel > div {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: var(--border-card);
+            border-radius: var(--radius-card);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        /* 按钮统一圆角和悬停 */
+        .btn,
+        .intro-btn,
+        .mission-popup-btn,
+        .top-center-banner-btn,
+        .branch-btn,
+        .nav-btn,
+        .riding-panel button {
+            border-radius: var(--radius-btn);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover,
+        .intro-btn:hover,
+        .mission-popup-btn:hover,
+        .top-center-banner-btn:hover,
+        .branch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--primary-glow);
+        }
+        /* 数据面板数值金色 */
+        .data-show-item span:last-child {
+            color: var(--accent);
+            font-weight: 800;
+        }
+        /* 图层按钮脉冲 */
+        .btn-pulse {
+            animation: btnPulse 1.2s infinite;
+            box-shadow: 0 0 0 0 rgba(34,211,238,0.6);
+        }
+        @keyframes btnPulse {
+            0% { box-shadow: 0 0 0 0 rgba(34,211,238,0.6); }
+            70% { box-shadow: 0 0 0 12px rgba(34,211,238,0); }
+            100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+        }
+        /* 文字统一 */
+        body, .narrative-body, .mission-body, .riding-info, .data-show-item span:first-child {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+        /* 移动端 */
+        @media (max-width:600px) {
+            :root { --radius-card: 16px; --radius-btn: 32px; }
+        }
     </style>
 </head>
 <body>
@@ -157,7 +232,7 @@
             </div>
             <div class="intro-item">
                 <span class="intro-icon">🚴‍♂️</span>
-                <div><strong>出发交互</strong><br>任务完成后小人出现在任务点西南方向。第一次必须点击小人出发；回访时顶部才出现快捷按钮。小人被遮挡或跑到屏幕外时，会有箭头指引。</div>
+                <div><strong>出发交互</strong><br>任务完成后小人出现在任务点西南方向。第一次必须点击小人出发；回访时顶部才出现快捷按钮。小人被遮挡或跑到屏幕外时，会有箭头指引。20秒未点击会弹出提醒。</div>
             </div>
             <div class="intro-item">
                 <span class="intro-icon">📊</span>
@@ -182,9 +257,8 @@
 
 <!-- ===== 任务浮动栏 ===== -->
 <div class="mission-float" id="missionFloat">
-    <div class="mission-header" onclick="toggleMissionFloat()">
+    <div class="mission-header">
         <span>🎯 当前地图任务</span>
-        <span id="missionToggle">▼</span>
     </div>
     <div class="mission-body" id="missionBody"></div>
 </div>
@@ -209,7 +283,7 @@
 
 <!-- ===== 合并后的左侧叙事面板 ===== -->
 <div class="narrative-merged" id="narrativeMerged">
-    <div class="narrative-author">吴宇浩 · 福建农林大学 · 空间信息与数字技术 · 2023级（2027届）</div>
+    <div class="narrative-author">林宇浩 · 福建农林大学 · 空间信息与数字技术 · 2023级（2027届）</div>
     <div class="phase-tag" id="narrativePhaseTag"></div>
     <div class="station-title" id="narrativeTitle"></div>
     <div class="station-date" id="narrativeDate"></div>
@@ -259,8 +333,8 @@
 
 <div class="chengdu-return-popup" id="chengduReturnPopup">
     <h3>🗺️ 回到成都 · 318零公里</h3>
-    <p>已走过一条线路，是否重新选择线路？<<br>还是继续欣赏成都的风景？</p>
-    <button class="branch-btn switch-btn" onclick="switchBranch()">🗺️ 选择路线</button>
+    <p>这里是两条天路的交汇点。<br>是否重新选择路线，还是继续欣赏成都的风景？</p>
+    <button class="branch-btn switch-btn" onclick="switchBranch()">🗺️ 切换路线</button>
     <button class="branch-btn stay-btn" onclick="stayChengdu()">🔥 继续欣赏成都</button>
 </div>
 
@@ -292,13 +366,13 @@
     const baseSites = [
         {
             name: "福州", pt: startPt, title: "榕城出发·GIS基点", phase: "begin", stage: "东南启程", date: "2026.07.10",
-            zoom: 13, mapType: BMAP_NORMAL_MAP, days: 0, km: 0, prov: 1, alt: 9,
-            diary: "2026年7月10日，福州闽江畔，闷热潮湿。我叫吴宇浩，2027届GIS毕业生。我想用一年时间骑行中国，把课堂里的水系、地貌、遥感，在大地上逐一对证。\n\n闽江在此分作南北两港：北港窄深，南港宽浅。我深吸一口气，绑好\"出发\"的旗子，踏上了第一脚。",
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 0, km: 0, prov: 1, alt: 9,
+            diary: "2026年7月10日，福州闽江畔，闷热潮湿。我叫林宇浩，2027届GIS毕业生。我想用一年时间骑行中国，把课堂里的水系、地貌、遥感，在大地上逐一对证。\n\n闽江在此分作南北两港：北港窄深，南港宽浅。我深吸一口气，绑好\"出发\"的旗子，踏上了第一脚。",
             gis: "闽江下游分汊河道：北港窄深、流速大，是主泄洪、主输沙通道；南港宽浅、分流比小，以行洪辅助为主。\"北港主槽、南港宽浅\"是河流动力地貌经典案例。",
-            img: "https://tse1-mm.cn.bing.net/th/id/OIP-C.VO9i_416Zf2_vGnM6rUbLQAAAA?w=257&h=193&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+            img: "https://tse4-mm.cn.bing.net/th/id/OIP-C.iD34jHLBwJ2tf--ZxbUboAHaEA?w=331&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
             task: "🌊 地图任务：缩放至 zoom ≥ 14，切换至「卫星影像」，并点击带箭头指引的蓝色发现点「闽江入海口附近」。观察南北两港形态。问题：北港和南港，哪个更适合泄洪输沙？为什么？",
             taskHint: "滚轮放大到14级以上，切换「卫星影像」，找到带箭头的蓝色圆点并点击。",
-            trigger: "zoom_layer_click", requiredZoom: 14, requiredLayer: BMAP_SATELLITE_MAP, zoomDirection: "in",
+            trigger: "zoom_layer_click", requiredZoom: 16, requiredLayer: BMAP_SATELLITE_MAP, zoomDirection: "in",
             discoveries: [
                 {type: "blue", title: "闽江入海口附近", content: "喇叭状河口中红树林湿地，GIS水系经典案例", pt: new BMapGL.Point(119.551892, 26.120981), taskTarget: true},
                 {type: "red", title: "出发地·骑友赠言", content: "\"兄弟带上补胎工具，路还长。\"第一声鼓励", pt: new BMapGL.Point(119.300678, 26.080122)}
@@ -306,13 +380,13 @@
         },
         {
             name: "泉州", pt: new BMapGL.Point(118.677531, 24.875162), title: "宋元大港·海丝起点", phase: "begin", stage: "东南启程", date: "2026.07.13",
-            zoom: 14, mapType: BMAP_NORMAL_MAP, days: 3, km: 180, prov: 1, alt: 7,
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 3, km: 180, prov: 1, alt: 7,
             diary: "2026年7月13日，泉州。红砖古厝，面线糊飘香。开元寺东西塔下，想起课堂上标注的历史建筑坐标。\n\n卖油条的阿婆多递一根：\"一路向西\"。宋元第一大港的繁华，如今只在老城烟火里留痕。",
             gis: "泉州港衰落：明清海禁政策+晋江泥沙淤积导致港池变浅+厦门深水港崛起分流。港口空间位移是GIS历史地理分析的典型样本。",
             img: "https://tse1-mm.cn.bing.net/th/id/OIP-C.WjIHpCqAwfvYgbERRfjKHwHaE7?w=300&h=199&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
-            task: "🎯 地图任务：切换至「卫星影像」图层并点击带箭头指引的蓝色发现点「开元寺附近」，查看泉州湾整体形态。问题：泉州港为何从东方第一大港衰落？",
-            taskHint: "点击右上角「标准地图」切换为「卫星影像」，找到带箭头的蓝色圆点并点击。",
-            trigger: "layer_and_click", requiredLayer: BMAP_SATELLITE_MAP,
+            task: "🎯 地图任务：缩放至 zoom ≥ 14，切换至「卫星影像」图层并点击带箭头指引的蓝色发现点「开元寺附近」，查看泉州湾整体形态。问题：泉州港为何从东方第一大港衰落？",
+            taskHint: "滚轮放大到14级以上，切换「卫星影像」，找到带箭头的蓝色圆点并点击。",
+            trigger: "zoom_layer_click", requiredZoom: 16, requiredLayer: BMAP_SATELLITE_MAP, zoomDirection: "in",
             discoveries: [
                 {type: "blue", title: "开元寺东西塔附近", content: "宋代地标，曾是海船导航的灯塔，GIS历史建筑空间定位案例", pt: new BMapGL.Point(118.585, 24.915), taskTarget: true},
                 {type: "red", title: "西街烟火", content: "老阿婆多递一根油条：\"一路向西\"", pt: new BMapGL.Point(118.587, 24.914)}
@@ -320,13 +394,13 @@
         },
         {
             name: "桂林", pt: new BMapGL.Point(110.181025, 25.235217), title: "喀斯特DEM·山水入画", phase: "develop", stage: "西南寻幽", date: "2026.07.28",
-            zoom: 13, mapType: BMAP_NORMAL_MAP, days: 18, km: 1230, prov: 4, alt: 140,
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 18, km: 1230, prov: 4, alt: 140,
             diary: "2026年7月28日，桂林。山从平地拔起，像馒头。切换卫星影像，植被覆盖的峰丛绿意浓郁，裸露洼地呈浅灰白色。\n\n船夫说没见过骑车旅行的，我笑笑：你们更没见过有人对着地图对比实景。这就是GIS学生的浪漫。",
             gis: "桂林峰丛相对高差200-300m，峰距100-200m。百度卫星图为真彩色（R/G/B），植被呈绿色；裸岩洼地反射率低呈浅灰白。是喀斯特地貌DEM中遥感解译的经典对象。",
             img: "https://ts1.tc.mm.bing.net/th/id/OIP-C.SHHd1msNdH5KwJIBI-wUaAHaE7?w=193&h=135&c=8&rs=1&qlt=90&o=6&dpr=1.9&pid=3.1&rm=2",
             task: "🛰️ 地图任务：缩放至 zoom ≥ 14，切换至「卫星影像」，并点击带箭头指引的蓝色发现点，观察漓江峰丛中洼地的色调纹理。问题：真彩色卫星图上，植被覆盖的峰丛是什么颜色？",
             taskHint: "滚轮放大到14级以上，切换「卫星影像」，找到带箭头的蓝色圆点并点击。",
-            trigger: "zoom_layer_click", requiredZoom: 14, requiredLayer: BMAP_SATELLITE_MAP, zoomDirection: "in",
+            trigger: "zoom_layer_click", requiredZoom: 16, requiredLayer: BMAP_SATELLITE_MAP, zoomDirection: "in",
             discoveries: [
                 {type: "blue", title: "漓江峰丛附近", content: "世界喀斯特遗产，卫星图可见峰丛洼地纹理", pt: new BMapGL.Point(110.451983, 25.061036), taskTarget: true},
                 {type: "red", title: "竹筏船夫", content: "\"骑车来的？头一个见。\"", pt: new BMapGL.Point(110.160234, 25.233298)}
@@ -334,13 +408,13 @@
         },
         {
             name: "大理", pt: new BMapGL.Point(100.227318, 25.590175), title: "洱海食感·绿色眼眸", phase: "develop", stage: "西南寻幽", date: "2026.08.20",
-            zoom: 12, mapType: BMAP_NORMAL_MAP, days: 23, km: 2430, prov: 6, alt: 2050,
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 23, km: 2430, prov: 6, alt: 2050,
             diary: "2026年8月20日，大理。苍山4122米，洱海1966米，垂直高差约2156米。环湖130公里，从日出到日落。一群骑友追上来，交换进藏路线，说：\"一个人骑到这里，已经很厉害了。\"",
             gis: "洱海湖面海拔约1966m（水利常用值），苍山马龙峰4122m，相对高差约2156m。断陷湖泊中断层-山组合，是青藏高原东缘地形陡变带的典型地貌。",
-            img: "https://tse2-mm.cn.bing.net/th/id/OIP-C.eF6xZwn1IwGoK1UcAthNqAHaFj?w=266&h=200&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
+            img: "https://tse4-mm.cn.bing.net/th/id/OIP-C.LHXRE9Ad2IviKOqlhaNm1AHaEo?w=275&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
             task: "⛰️ 地图任务：缩放至 zoom ≥ 13，切换至「地球3D」，并点击带箭头指引的蓝色发现点，倾斜视角观察苍山洱海三维地形。问题：苍山与洱海的相对高差约多少米？",
             taskHint: "放大到13级以上，点击右上角「标准地图」→「地球3D」，找到带箭头的蓝色圆点并点击。",
-            trigger: "zoom_earth_click", requiredZoom: 13, requiredMode: BMAP_EARTH_MAP, zoomDirection: "in",
+            trigger: "zoom_earth_click", requiredZoom: 14, requiredMode: BMAP_EARTH_MAP, zoomDirection: "in",
             discoveries: [
                 {type: "blue", title: "苍山洱海附近", content: "苍山4122m-洱海1966m，高差约2156m", pt: new BMapGL.Point(100.197325, 25.669456), taskTarget: true},
                 {type: "red", title: "环湖小队", content: "结伴骑行130km，交换进藏路线", pt: new BMapGL.Point(100.216590, 25.588321)}
@@ -363,7 +437,7 @@
         },
         {
             name: "拉萨", pt: new BMapGL.Point(91.142517, 29.650763), title: "圣城·布达拉宫", phase: "climax", stage: "西北追风", date: "2027.05.20",
-            zoom: 14, mapType: BMAP_NORMAL_MAP, days: 250, km: 7430, prov: 11, alt: 3650, isClimax: true,
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 250, km: 7430, prov: 11, alt: 3650, isClimax: true,
             diary: "2027年5月20日，拉萨。高原头疼欲裂，但切换到地球3D模式，倾斜视角看到布达拉宫矗立红山之巅时，眼泪掉下来。红山海拔约3700m，比市区高出约50m，建筑主体高117m。DEM里的抽象数据，变成可触摸的大地。",
             gis: "拉萨市区海拔3650m，红山相对高差50m，绝对海拔3700m；宫殿建筑主体高约117m。3D地球模式可直观展示地形-建筑耦合关系，是DEM可视化的典型应用。",
             img: "https://tse3-mm.cn.bing.net/th/id/OIP-C.TcA75iulva1F5mVO-shepAHaE7?w=227&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
@@ -377,7 +451,7 @@
         },
         {
             name: "嘉峪关", pt: new BMapGL.Point(98.278914, 39.787358), title: "长城尽头·戈壁孤城", phase: "climax", stage: "西北追风", date: "2027.04.10",
-            zoom: 13, mapType: BMAP_NORMAL_MAP, days: 203, km: 5030, prov: 9, alt: 1450,
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 203, km: 5030, prov: 9, alt: 1450,
             diary: "2027年4月10日，嘉峪关。戈壁中的孤城，卫星影像上城墙呈浅色线性痕迹。守关老人惊讶：\"骑车来的？头一个！\" 历史在个人尺度，在风里模糊。",
             gis: "嘉峪关夯土城墙反射率中等（土黄），戈壁砾石因表面风化壳反射率较高（灰白），通过光谱差异可提取线性遗迹，是遥感考古的基础方法。",
             img: "https://tse4-mm.cn.bing.net/th/id/OIP-C.BZT8tDWOqtBZUkkRMtAdUwHaE7?w=268&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
@@ -391,10 +465,10 @@
         },
         {
             name: "敦煌", pt: new BMapGL.Point(94.601917, 40.136352), title: "丝路瑰宝·月牙泉", phase: "climax", stage: "西北追风", date: "2027.05.01",
-            zoom: 13, mapType: BMAP_NORMAL_MAP, days: 295, km: 8200, prov: 12, alt: 1100,
+            zoom: 10, mapType: BMAP_NORMAL_MAP, days: 295, km: 8200, prov: 12, alt: 1100,
             diary: "2027年5月1日，敦煌。鸣沙山，月牙泉。卫星影像上泉水呈深绿色，像沙漠里的眼泪。夜里躺在沙丘上看银河，星星像GIS点云一样在头顶展开。",
             gis: "清水体在可见光-近红外全波段强吸收，卫星图呈深色；植被叶绿素在近红外波段强反射，是遥感解译植被的核心特征。水体与植被的光谱差异是遥感基础应用。",
-            img: "https://ts1.tc.mm.bing.net/th/id/OIP-C.xdvpO_jto_WcJU8l5pYbFQHaE7?w=193&h=135&c=8&rs=1&qlt=90&o=6&dpr=1.9&pid=3.1&rm=2",
+            img: "https://tse3-mm.cn.bing.net/th/id/OIP-C.xTTSOehLXE8Aq_jVm4ePmgHaE7?w=264&h=180&c=7&r=0&o=7&dpr=1.9&pid=1.7&rm=3",
             task: "💧 地图任务：切换至「卫星影像」图层并点击带箭头指引的蓝色发现点「月牙泉附近」。观察水体色调。问题：水体在卫星图上为什么呈深色？",
             taskHint: "切换「卫星影像」，点击带箭头的蓝色圆点查看地理。",
             trigger: "layer_and_click", requiredLayer: BMAP_SATELLITE_MAP,
@@ -434,6 +508,7 @@
     if (endSite) { endSite._taskCompleted = true; endSite._unlocked = true; }
 
     const branchRoutes = { qingzang: [0,1,2,3,4,5,8], hexi: [0,1,2,3,4,6,7,8] };
+    let riderTimeout = null;
     let storyData = [...baseSites.slice(0,5)];
     let branchApplied = false, idx = 0, isMoving = false, showingDataPanel = false;
     let moveStep = 200, moveDelay = 80, maxAltitude = 5013;
@@ -679,6 +754,7 @@
         } else if (missing.length > 0) {
             showToast("⚠️ 还需完成：" + missing.join("，"), 3000);
         }
+        refreshMissionUI();
     }
 
     function completeTask() {
@@ -704,6 +780,7 @@
             document.getElementById("endingToast").classList.add("show");
             setTimeout(() => document.getElementById("endingToast").classList.remove("show"), 6000);
         }
+        document.getElementById("layerBtn").classList.remove("btn-pulse");
         unlockNextStation();
     }
 
@@ -716,6 +793,10 @@
 
     function initStation() {
         hideAllPanels();
+        // 强制隐藏小人引导提示（终点/成都等无小人站点必须清理）
+        let guide = document.getElementById("riderGuide");
+        if (guide) { guide.classList.remove("show"); guide.classList.remove("rider-guide-blocked"); }
+        if (riderTimeout) clearTimeout(riderTimeout);
         let curr = storyData[idx];
         map.setMapType(curr.mapType);
         syncLayerButton();
@@ -733,9 +814,11 @@
             curr._taskShown = true;
             showMissionPopup(curr);
         }
+        refreshMissionUI();
     }
 
     function moveToNext() {
+        if (riderTimeout) clearTimeout(riderTimeout);
         if (isMoving || idx >= storyData.length - 1) return;
         if (!storyData[idx + 1]._unlocked) {
             showToast("请先完成当前站点的任务！");
@@ -754,16 +837,11 @@
         dynamicLine.setPath([A]);
         showRiding(oldIdx, newIdx);
 
-        let isGlobalView = storyData[newIdx].phase === "climax" || storyData[newIdx].phase === "end" || storyData[oldIdx].phase === "climax";
         let wasEarthMode = map.getMapType() === BMAP_EARTH_MAP;
         if (wasEarthMode) map.setMapType(BMAP_NORMAL_MAP);
 
-        if (isGlobalView) {
-            map.setViewport([A, B]);
-        } else {
-            map.setCenter(A);
-            map.setZoom(Math.min(map.getZoom(), 8));
-        }
+        // 动画前：全局视野一览整条路线，避免瓦片加载跟不上
+        map.setViewport([A, B]);
 
         let path = [];
         for (let i = 0; i <= moveStep; i++) {
@@ -776,9 +854,7 @@
             let curPath = dynamicLine.getPath();
             curPath.push(path[step]);
             dynamicLine.setPath(curPath);
-            if (!isGlobalView && step % 5 === 0) {
-                map.setCenter(path[step]);
-            }
+            // 动画期间地图保持不动，只画线，到达后自动定位
             step++;
             if (step >= path.length) {
                 clearInterval(interval);
@@ -804,10 +880,14 @@
         let dist = Math.round(to.km - from.km), days = to.days - from.days;
         document.getElementById("ridingText").innerHTML = `🚴‍♂️ ${from.name} → ${to.name}`;
         document.getElementById("ridingRoute").innerHTML = `📏 ${dist} km · 🕐 ${days} 天<br>${from.name} → ${to.name}`;
-        document.getElementById("ridingInfo").innerHTML = `✨ 地图视角自动跟随，跨越山河。下一站：${to.name} ✨`;
+        document.getElementById("ridingInfo").innerHTML = `✨ 全程路线一览，即将抵达 ${to.name}。到达后自动定位 ✨`;
     }
 
     function jumpToStation(i) {
+        if (riderTimeout) clearTimeout(riderTimeout);
+        // 强制隐藏小人引导提示
+        let guide = document.getElementById("riderGuide");
+        if (guide) { guide.classList.remove("show"); guide.classList.remove("rider-guide-blocked"); }
         if (i < 0 || i >= storyData.length) {
             showToast("站点索引异常，请刷新页面重试！");
             return;
@@ -816,7 +896,8 @@
             showToast("此站点尚未解锁，请先完成前面站点的任务！");
             return;
         }
-        if (storyData[i].name === "成都" && chengduVisited && completedRoutes.size < 2 && branchChosen) {
+        // 成都站永久保留路线切换功能
+        if (storyData[i].name === "成都" && chengduVisited) {
             showChengduReturnPopup();
             return;
         }
@@ -967,49 +1048,90 @@
     }
 
     function updateMissionFloat() {
-        let curr = storyData[idx];
-        let body = document.getElementById("missionBody");
-        if (curr._taskCompleted) {
-            body.innerHTML = "✅ 任务已完成，点击地图上的 🚴‍♂️ 骑行小人前往下一站";
-        } else if (!curr.task) {
-            body.innerHTML = "";
-        } else {
-            let missing = [];
-            if (curr.trigger === "zoom_layer_click") {
-                if (!curr._zoomReady) missing.push("缩放至 zoom " + (curr.zoomDirection === "out" ? "≤ " : "≥ ") + curr.requiredZoom);
-                if (!curr._layerReady) missing.push("切换「卫星影像」");
-                if (!curr._taskClicked) missing.push("点击目标点");
-            } else if (curr.trigger === "zoom_earth_click") {
-                if (!curr._zoomReady) missing.push("缩放至 zoom " + (curr.zoomDirection === "out" ? "≤ " : "≥ ") + curr.requiredZoom);
-                if (!curr._earthReady) missing.push("切换「地球3D」");
-                if (!curr._taskClicked) missing.push("点击目标点");
-            } else if (curr.trigger === "layer_and_click") {
-                if (!curr._layerReady) missing.push("切换「卫星影像」");
-                if (!curr._taskClicked) missing.push("点击目标点");
-            } else if (curr.trigger === "earth_and_click") {
-                if (!curr._earthReady) missing.push("切换「地球3D」");
-                if (!curr._taskClicked) missing.push("点击目标点");
-            } else if (curr.trigger === "discovery_click") {
-                if (!curr._taskClicked) missing.push("点击目标点");
+        updateMissionChecklist();
+    }
+
+    function updateMissionChecklist() {
+        const curr = storyData[idx];
+        const body = document.getElementById("missionBody");
+        if (!curr.task || curr._taskCompleted) {
+            if (curr.isEnd) {
+                body.innerHTML = "🏁 已抵达旅程终点，10000公里闭环完成";
+            } else if (curr.name === "成都") {
+                body.innerHTML = "✅ 任务已完成，请点击路线选择按钮继续旅程";
+            } else {
+                body.innerHTML = "✅ 任务已完成，点击地图上的 🚴‍♂️ 骑行小人前往下一站";
             }
-            
-            let extra = missing.length > 0 ? "<br><br><em style='color:#facc15;'>⚠️ 还需完成：" + missing.join("，") + "</em>" : "";
-            body.innerHTML = curr.task + "<br><br><em>💡 " + curr.taskHint + "</em>" + extra;
+            return;
         }
-    }
 
-    function toggleMissionFloat() {
-        let body = document.getElementById("missionBody");
-        let toggle = document.getElementById("missionToggle");
-        if (body.classList.contains("hidden")) {
-            body.classList.remove("hidden");
-            toggle.innerText = "▼";
+        let steps = [];
+        let conditions = {
+            zoom: { label: curr.zoomDirection === "out" ? `缩小到${curr.requiredZoom}级以下，看清整体地形` : `放大到${curr.requiredZoom}级以上，看清地形细节`, done: curr._zoomReady },
+            layer: { label: "切换成卫星影像图层", done: curr._layerReady },
+            earth: { label: "切换成地球3D模式", done: curr._earthReady },
+            click: { label: "点击带箭头的蓝色发现点", done: curr._taskClicked }
+        };
+
+        if (curr.trigger === "zoom_layer_click") {
+            steps = [conditions.zoom, conditions.layer, conditions.click];
+        } else if (curr.trigger === "zoom_earth_click") {
+            steps = [conditions.zoom, conditions.earth, conditions.click];
+        } else if (curr.trigger === "layer_and_click") {
+            steps = [conditions.layer, conditions.click];
+        } else if (curr.trigger === "earth_and_click") {
+            steps = [conditions.earth, conditions.click];
         } else {
-            body.classList.add("hidden");
-            toggle.innerText = "▶";
+            steps = [conditions.click];
         }
+
+        let html = '<ul style="list-style:none; padding-left:0; margin:0;">';
+        let firstUndone = null;
+        steps.forEach(step => {
+            const done = step.done;
+            const icon = done ? '✅' : '⭕';
+            const color = done ? '#22c55e' : '#94a3b8';
+            html += `<li style="margin-bottom:10px; display:flex; align-items:center; gap:8px; color:${color};">`;
+            html += `<span style="font-size:16px;">${icon}</span>`;
+            html += `<span style="flex:1;">${step.label}</span>`;
+            html += `</li>`;
+            if (!done && firstUndone === null) firstUndone = step.label;
+        });
+        html += '</ul>';
+
+        if (firstUndone) {
+            html += `<div style="margin-top:10px; font-size:12px; color:#facc15; font-weight:700;">👉 下一步：${firstUndone}</div>`;
+        }
+
+        body.innerHTML = html;
     }
 
+    function refreshMissionUI() {
+        updateMissionChecklist();
+
+        // 图层按钮脉冲控制
+        const curr = storyData[idx];
+        const layerBtn = document.getElementById("layerBtn");
+        if (!curr || curr._taskCompleted || !curr.task) {
+            layerBtn.classList.remove("btn-pulse");
+            return;
+        }
+
+        let needLayer = false;
+        let needEarth = false;
+        if (curr.trigger === "zoom_layer_click" || curr.trigger === "layer_and_click") needLayer = true;
+        if (curr.trigger === "zoom_earth_click" || curr.trigger === "earth_and_click") needEarth = true;
+
+        let shouldPulse = false;
+        if (needLayer && !curr._layerReady) shouldPulse = true;
+        if (needEarth && !curr._earthReady) shouldPulse = true;
+
+        if (shouldPulse) layerBtn.classList.add("btn-pulse");
+        else layerBtn.classList.remove("btn-pulse");
+    }
+
+    
+    
     function clearDiscoveries() {
         discoveryCircles.forEach(c => map.removeOverlay(c));
         discoveryCircles = [];
@@ -1053,7 +1175,7 @@
                     curr._taskClicked = true;
                     checkTaskComplete();
                 }
-                updateMissionFloat();
+                refreshMissionUI();
             });
             map.addOverlay(label);
             discoveryCircles.push(label);
@@ -1094,8 +1216,15 @@
             map.addOverlay(riderLabel);
             discoveryCircles.push(riderLabel);
 
+            // 清除之前的定时器
+            if (riderTimeout) clearTimeout(riderTimeout);
+            // 设置20秒未点击提醒
+            riderTimeout = setTimeout(() => {
+                showToast("🚴‍♂️ 点击地图上的骑行小人继续旅程", 5000);
+            }, 20000);
+
             // 点击出发提示 - 紧贴小人头顶，offset 正上方
-            let hintLabel = new BMapGL.Label('👆 点击出发', {position: departPt, offset: new BMapGL.Size(-40, -55)});
+            let hintLabel = new BMapGL.Label('👆 点击小人前往下一站', {position: departPt, offset: new BMapGL.Size(-50, -55)});
             hintLabel.setStyle({
                 color: '#22d3ee', fontSize: '14px', background: 'rgba(8,16,28,0.95)',
                 border: '2px solid #22d3ee', borderRadius: '12px', padding: '6px 14px',
@@ -1113,6 +1242,11 @@
     }
 
     function drawBranchRoutes() {
+        // 彻底隐藏旧的 branchHint，只保留 branchChoicePanel
+        let branchHint = document.getElementById("branchHint");
+        if (branchHint) { branchHint.classList.remove("show"); branchHint.style.display = "none"; }
+        // 清理旧的分支路线，避免叠加
+        clearBranchRoutes();
         let chengduPt = storyData[idx].pt, lhasaPt = baseSites[5].pt, jygPt = baseSites[6].pt;
         map.setViewport([chengduPt, lhasaPt, jygPt]);
         let qzLine = new BMapGL.Polyline([chengduPt, lhasaPt], {strokeColor: "#dc2626", strokeWeight: 6, strokeOpacity: 0.85, lineCap: "round", lineJoin: "round"});
@@ -1120,12 +1254,28 @@
         map.addOverlay(qzLine);
         map.addOverlay(hxLine);
         branchPolylines = [qzLine, hxLine];
+
+        // 显示悬浮选择面板
+        const panel = document.getElementById("branchChoicePanel");
+        if (panel) {
+            panel.style.display = "block";
+            document.getElementById("chooseQingzang").onclick = () => {
+                panel.style.display = "none";
+                selectRoute("qingzang");
+            };
+            document.getElementById("chooseHexi").onclick = () => {
+                panel.style.display = "none";
+                selectRoute("hexi");
+            };
+        }
+
         const selectRoute = (route) => {
             if (branchApplied) return;
             branchApplied = true;
             branchChosen = route;
             chengduVisited = true;
             document.getElementById("branchHint").classList.remove("show");
+            if (panel) panel.style.display = "none";
             clearBranchRoutes();
             let indices = branchRoutes[route];
             storyData = indices.map(i => ({...baseSites[i]}));
@@ -1174,11 +1324,19 @@
             }, 500);
             renderStationList();
         };
-        qzLine.addEventListener("click", () => selectRoute("qingzang"));
-        hxLine.addEventListener("click", () => selectRoute("hexi"));
-        setTimeout(() => document.getElementById("branchHint").classList.add("show"), 1500);
+
+        // 保留地图线点击作为双保险
+        qzLine.addEventListener("click", () => {
+            if (panel) panel.style.display = "none";
+            selectRoute("qingzang");
+        });
+        hxLine.addEventListener("click", () => {
+            if (panel) panel.style.display = "none";
+            selectRoute("hexi");
+        });
     }
 
+    
     function clearBranchRoutes() {
         branchPolylines.forEach(p => map.removeOverlay(p));
         branchPolylines = [];
@@ -1186,10 +1344,12 @@
 
     function switchBranch() {
         document.getElementById("chengduReturnPopup").classList.remove("show");
+        // 先清理旧状态，准备重新选择
         branchApplied = false;
         let newRoute = branchChosen === 'qingzang' ? 'hexi' : 'qingzang';
         branchChosen = null;
         chengduVisited = false;
+        // 重建数据
         let indices = branchRoutes[newRoute];
         storyData = indices.map(i => ({...baseSites[i]}));
         completedRoutes.add(newRoute);
@@ -1231,7 +1391,9 @@
             stationMarkers.push(m);
         });
         idx = chengduIdx;
-        initStation();
+        // 清理旧路线，重新显示路线选择面板
+        clearBranchRoutes();
+        drawBranchRoutes();
         renderStationList();
     }
 
@@ -1282,7 +1444,7 @@
                 checkTaskComplete();
             }
         }
-        updateMissionFloat();
+        refreshMissionUI();
     });
     map.addEventListener("maptypechange", () => {
         let curr = storyData[idx];
@@ -1296,7 +1458,7 @@
             checkTaskComplete();
         }
         syncLayerButton();
-        updateMissionFloat();
+        refreshMissionUI();
     });
 
     function updateRiderGuide(departPt) {
@@ -1323,17 +1485,6 @@
                 }
             }
 
-            // 检测是否被底部数据面板遮挡
-            let dataPanel = document.getElementById("dataShowPanel");
-            let isBlockedByData = false;
-            if (dataPanel && dataPanel.classList.contains("show")) {
-                let dataRect = dataPanel.getBoundingClientRect();
-                if (pixel.x > dataRect.left && pixel.x < dataRect.right && 
-                    pixel.y > dataRect.top && pixel.y < dataRect.bottom) {
-                    isBlockedByData = true;
-                }
-            }
-
             // 检测是否被任务浮动栏遮挡
             let missionFloat = document.getElementById("missionFloat");
             let isBlockedByMission = false;
@@ -1345,7 +1496,7 @@
                 }
             }
 
-            let isBlocked = isBlockedByPanel || isBlockedByData || isBlockedByMission;
+            let isBlocked = isBlockedByPanel || isBlockedByMission;
 
             if (!inViewport || isBlocked) {
                 guide.classList.add("show");
@@ -1414,5 +1565,18 @@
         initStation();
     };
 </script>
+
+<!-- ===== 成都分支选择面板 ===== -->
+<div id="branchChoicePanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:30000;">
+    <div style="background:rgba(8,16,28,0.98); border:2px solid #facc15; border-radius:24px; padding:28px 32px; text-align:center; max-width:360px; backdrop-filter:blur(16px);">
+        <h3 style="color:#facc15; margin-bottom:12px;">🗺️ 选择你的路线</h3>
+        <p style="margin-bottom:24px; color:#cbd5e1;">点击下方按钮，地图上的对应路线会高亮</p>
+        <div style="display:flex; justify-content:center; gap:12px;">
+            <button id="chooseQingzang" style="background:linear-gradient(135deg, #0ea5e9, #0284c7); border:none; border-radius:40px; padding:10px 24px; color:white; font-weight:bold; cursor:pointer;">🚩 青藏线 (高海拔)</button>
+            <button id="chooseHexi" style="background:linear-gradient(135deg, #f59e0b, #b45309); border:none; border-radius:40px; padding:10px 24px; color:white; font-weight:bold; cursor:pointer;">🏜️ 河西走廊 (丝路)</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
